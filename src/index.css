@@ -1,0 +1,156 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: dark;
+  color: rgba(255, 255, 255, 0.92);
+  background-color: #06070a;
+  
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+  overflow: hidden;
+  background: #06070a;
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+}
+
+/* ─── Glass Panel ───────────────────────────────── */
+.glass-panel {
+  background: rgba(12, 16, 24, 0.72);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  box-shadow:
+    0 4px 30px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* ─── Tooltip ───────────────────────────────────── */
+.modality-tooltip {
+  width: 260px;
+  padding: 18px 20px;
+  pointer-events: none;
+  z-index: 10;
+  border: 1px solid rgba(102, 252, 241, 0.15);
+}
+
+.modality-tooltip h3 {
+  margin: 0 0 12px 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #66fcf1;
+  text-shadow: 0 0 12px rgba(102, 252, 241, 0.35);
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.stat-value {
+  font-weight: 600;
+  color: #e5e7eb;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(102, 252, 241, 0.2), transparent);
+  margin: 10px 0;
+}
+
+.stat-average {
+  font-weight: 500;
+}
+
+.stat-value.highlight {
+  color: #66fcf1;
+  font-size: 15px;
+  text-shadow: 0 0 8px rgba(102, 252, 241, 0.3);
+}
+
+/* ─── Persistent Node Label ─────────────────────── */
+.modality-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.65);
+  pointer-events: none;
+  white-space: nowrap;
+  transform: translateY(14px);
+  text-shadow:
+    0 0 6px rgba(0, 0, 0, 0.9),
+    0 1px 3px rgba(0, 0, 0, 0.7);
+  letter-spacing: 0.01em;
+}
+
+/* ─── Scrollbars & Interactive Watchlist ─────────── */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 2px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.watchlist-row:hover {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+  transform: translateX(2px);
+}
+
+.report-metric-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: #9ca3af;
+  margin-bottom: 5px;
+}
+
+.report-metric-row strong {
+  color: #f3f4f6;
+  font-family: monospace;
+}
+
