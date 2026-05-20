@@ -1,11 +1,13 @@
-import { useMemo } from 'react';
-import { modalitiesData } from '../data/modalities';
+import React, { useMemo } from 'react';
+import type { Modality } from '../data/modalities';
 
 interface UIOverlayProps {
   viewMode: 'biological' | 'economic';
   setViewMode: (mode: 'biological' | 'economic') => void;
   selectedNodeId: string | null;
   onSelectNode: (id: string | null) => void;
+  modalities: Modality[];
+  onUpdateModality: (updated: Modality) => void;
 }
 
 const getRecommendationColor = (rec: string): string => {
@@ -24,10 +26,12 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
   setViewMode,
   selectedNodeId,
   onSelectNode,
+  modalities,
+  onUpdateModality,
 }) => {
   const selectedNode = useMemo(
-    () => modalitiesData.find(m => m.id === selectedNodeId) || null,
-    [selectedNodeId]
+    () => modalities.find(m => m.id === selectedNodeId) || null,
+    [selectedNodeId, modalities]
   );
 
   const averageScore = useMemo(
@@ -37,7 +41,7 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
 
   // Sorted watchlist for the Bloomberg panel
   const watchList = useMemo(() => {
-    return [...modalitiesData].sort((a, b) => {
+    return [...modalities].sort((a, b) => {
       // Sort priority: STRONG BUY -> BUY -> HOLD -> UNDERPERFORM -> SHORT
       const priority: Record<string, number> = {
         'STRONG BUY': 5,
@@ -48,11 +52,45 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
       };
       return (priority[b.financialMetrics.recommendation] || 0) - (priority[a.financialMetrics.recommendation] || 0);
     });
-  }, []);
+  }, [modalities]);
 
-  const totalAssetCount = modalitiesData.length;
-  const strongBuysCount = modalitiesData.filter(m => m.financialMetrics.recommendation === 'STRONG BUY').length;
-  const shortsCount = modalitiesData.filter(m => m.financialMetrics.recommendation === 'SHORT').length;
+  const totalAssetCount = modalities.length;
+  const strongBuysCount = modalities.filter(m => m.financialMetrics.recommendation === 'STRONG BUY').length;
+  const shortsCount = modalities.filter(m => m.financialMetrics.recommendation === 'SHORT').length;
+
+  const handleSliderChange = (key: string, val: number) => {
+    if (!selectedNode) return;
+    
+    let updated: Modality;
+    if (['capex', 'attentionYield', 'retentionMoat'].includes(key)) {
+      updated = {
+        ...selectedNode,
+        financialMetrics: {
+          ...selectedNode.financialMetrics,
+          [key]: val
+        }
+      };
+    } else {
+      updated = {
+        ...selectedNode,
+        [key]: val
+      };
+    }
+    onUpdateModality(updated);
+  };
+
+  const handleMetaChange = (key: string, val: any) => {
+    if (!selectedNode) return;
+    
+    const updated: Modality = {
+      ...selectedNode,
+      financialMetrics: {
+        ...selectedNode.financialMetrics,
+        [key]: val
+      }
+    };
+    onUpdateModality(updated);
+  };
 
   return (
     <div
@@ -79,7 +117,7 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
               EQUITY RESEARCH
             </span>
             <span style={{ fontSize: '10px', backgroundColor: 'rgba(255, 255, 255, 0.05)', color: '#9ca3af', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
-              v2.0
+              v2.1 (MUTABLE)
             </span>
           </div>
           
@@ -97,7 +135,7 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
             Attention Portfolio Mapper
           </h1>
           <p style={{ color: '#9ca3af', fontSize: '13px', lineHeight: 1.6 }}>
-            An interactive framework mapping media formats as financial assets competing in the global attention economy.
+            An interactive framework mapping media formats as financial assets competing in the global attention economy. Drag sliders to adjust model weights in real-time.
           </p>
         </header>
 
@@ -210,7 +248,7 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
       {/* ─── RIGHT COLUMN: Equity Research Report / Watchlist ─── */}
       <div style={{ width: '420px', display: 'flex', flexDirection: 'column', height: 'calc(100% - 48px)', pointerEvents: 'auto' }}>
         {selectedNode ? (
-          /* Detailed Equity Research Report */
+          /* Detailed Equity Research Report Editor */
           <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '24px', overflow: 'hidden' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
               <div>
@@ -244,105 +282,210 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
               </button>
             </div>
 
-            {/* Recommendation Rating Banner */}
+            {/* Interactive Recommendation Rating Banner */}
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                padding: '12px 18px',
+                padding: '8px 14px',
                 borderRadius: '10px',
                 backgroundColor: getRecommendationColor(selectedNode.financialMetrics.recommendation) + '15',
                 border: `1px solid ${getRecommendationColor(selectedNode.financialMetrics.recommendation)}33`,
                 marginBottom: '20px',
               }}
             >
-              <span style={{ fontSize: '12px', fontWeight: 600, color: '#e5e7eb' }}>Analyst Consensus:</span>
-              <span
+              <span style={{ fontSize: '12px', fontWeight: 600, color: '#e5e7eb' }}>Consensus Rating:</span>
+              <select
+                value={selectedNode.financialMetrics.recommendation}
+                onChange={(e) => handleMetaChange('recommendation', e.target.value)}
                 style={{
-                  fontSize: '14px',
-                  fontWeight: 800,
+                  backgroundColor: '#070a12',
                   color: getRecommendationColor(selectedNode.financialMetrics.recommendation),
+                  border: `1px solid ${getRecommendationColor(selectedNode.financialMetrics.recommendation)}44`,
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  fontWeight: 800,
+                  padding: '4px 10px',
+                  cursor: 'pointer',
+                  outline: 'none',
+                  fontFamily: 'inherit',
+                  textAlign: 'right',
                   letterSpacing: '0.05em',
-                  textShadow: `0 0 10px ${getRecommendationColor(selectedNode.financialMetrics.recommendation)}55`,
+                  transition: 'border 0.2s',
                 }}
               >
-                {selectedNode.financialMetrics.recommendation}
-              </span>
+                <option value="STRONG BUY">STRONG BUY</option>
+                <option value="BUY">BUY</option>
+                <option value="HOLD">HOLD</option>
+                <option value="UNDERPERFORM">UNDERPERFORM</option>
+                <option value="SHORT">SHORT</option>
+              </select>
             </div>
 
-            {/* Scrollable Report Content */}
+            {/* Scrollable Report Content & Sliders */}
             <div style={{ flexGrow: 1, overflowY: 'auto', paddingRight: '4px' }} className="custom-scrollbar">
               
+              {/* Parameter Adjustments (Dynamic Sliders) */}
+              <div style={{ marginBottom: '22px' }}>
+                <h4 style={{ fontSize: '11px', color: '#8892b0', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, marginBottom: '14px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '4px' }}>
+                  Adjust Model Parameters
+                </h4>
+                
+                {/* Economic Parameters */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px', backgroundColor: 'rgba(0,0,0,0.15)', padding: '14px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.02)' }}>
+                  <div style={{ fontSize: '10px', color: '#6b7280', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '2px' }}>
+                    ECONOMIC MODEL METRICS
+                  </div>
+                  
+                  {/* CapEx */}
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
+                      <span style={{ color: '#9ca3af' }}>Production Cost (CapEx):</span>
+                      <strong style={{ color: '#f59e0b' }}>{selectedNode.financialMetrics.capex} / 100</strong>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={selectedNode.financialMetrics.capex}
+                      onChange={(e) => handleSliderChange('capex', parseInt(e.target.value))}
+                      className="analyst-slider slider-capex"
+                    />
+                  </div>
+
+                  {/* Attention Yield */}
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
+                      <span style={{ color: '#9ca3af' }}>Attention Yield (ROI):</span>
+                      <strong style={{ color: '#10b981' }}>{selectedNode.financialMetrics.attentionYield} / 100</strong>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={selectedNode.financialMetrics.attentionYield}
+                      onChange={(e) => handleSliderChange('attentionYield', parseInt(e.target.value))}
+                      className="analyst-slider slider-yield"
+                    />
+                  </div>
+
+                  {/* Retention Moat */}
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
+                      <span style={{ color: '#9ca3af' }}>Retention Moat (LTV):</span>
+                      <strong style={{ color: '#06b6d4' }}>{selectedNode.financialMetrics.retentionMoat} / 100</strong>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={selectedNode.financialMetrics.retentionMoat}
+                      onChange={(e) => handleSliderChange('retentionMoat', parseInt(e.target.value))}
+                      className="analyst-slider slider-moat"
+                    />
+                  </div>
+
+                  {/* TAM Rating */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px', fontSize: '12px' }}>
+                    <span style={{ color: '#9ca3af' }}>Target Addressable Market (TAM):</span>
+                    <select
+                      value={selectedNode.financialMetrics.tamRating}
+                      onChange={(e) => handleMetaChange('tamRating', e.target.value)}
+                      className="analyst-select"
+                    >
+                      <option value="Micro">Micro</option>
+                      <option value="Small">Small</option>
+                      <option value="Medium">Medium</option>
+                      <option value="Large">Large</option>
+                      <option value="Massive">Massive</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Biological Parameters */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', backgroundColor: 'rgba(0,0,0,0.15)', padding: '14px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.02)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                    <span style={{ fontSize: '10px', color: '#6b7280', fontWeight: 700, letterSpacing: '0.05em' }}>BIOLOGICAL MODEL METRICS</span>
+                    <span style={{ fontSize: '10px', color: '#45f3ff', fontWeight: 700 }}>Avg Mindshare: {averageScore}/100</span>
+                  </div>
+
+                  {/* Cognitive Load */}
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
+                      <span style={{ color: '#9ca3af' }}>Cognitive Load:</span>
+                      <strong style={{ color: '#ff5555' }}>{selectedNode.cognitiveLoad} / 100</strong>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={selectedNode.cognitiveLoad}
+                      onChange={(e) => handleSliderChange('cognitiveLoad', parseInt(e.target.value))}
+                      className="analyst-slider slider-cog"
+                    />
+                  </div>
+
+                  {/* Systemic Agency */}
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
+                      <span style={{ color: '#9ca3af' }}>Systemic Agency:</span>
+                      <strong style={{ color: '#ff2a6d' }}>{selectedNode.systemicAgency} / 100</strong>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={selectedNode.systemicAgency}
+                      onChange={(e) => handleSliderChange('systemicAgency', parseInt(e.target.value))}
+                      className="analyst-slider slider-agency"
+                    />
+                  </div>
+
+                  {/* Sensory Utilization */}
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
+                      <span style={{ color: '#9ca3af' }}>Sensory Utilization:</span>
+                      <strong style={{ color: '#5555ff' }}>{selectedNode.sensoryUtilization} / 100</strong>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={selectedNode.sensoryUtilization}
+                      onChange={(e) => handleSliderChange('sensoryUtilization', parseInt(e.target.value))}
+                      className="analyst-slider slider-sensory"
+                    />
+                  </div>
+                </div>
+              </div>
+
               {/* Thesis Section */}
               <div style={{ marginBottom: '20px' }}>
                 <h4 style={{ fontSize: '11px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, marginBottom: '6px' }}>
-                  Investment Thesis
+                  Investment Thesis (Editable)
                 </h4>
-                <p style={{ fontSize: '13px', color: '#d1d5db', lineHeight: 1.6 }}>
-                  {selectedNode.financialMetrics.thesis}
-                </p>
+                <textarea
+                  value={selectedNode.financialMetrics.thesis}
+                  onChange={(e) => handleMetaChange('thesis', e.target.value)}
+                  className="analyst-textarea custom-scrollbar"
+                  rows={4}
+                  placeholder="Enter investment thesis..."
+                />
               </div>
 
               {/* Risks Section */}
               <div style={{ marginBottom: '20px' }}>
                 <h4 style={{ fontSize: '11px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, marginBottom: '6px' }}>
-                  Risk & Friction Vectors
+                  Risk & Friction Vectors (Editable)
                 </h4>
-                <p style={{ fontSize: '13px', color: '#d1d5db', lineHeight: 1.6 }}>
-                  {selectedNode.financialMetrics.risks}
-                </p>
-              </div>
-
-              {/* Grid of Scores */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
-                
-                {/* Economic Scores */}
-                <div style={{ backgroundColor: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.03)' }}>
-                  <div style={{ fontSize: '10px', color: '#6b7280', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '8px' }}>
-                    ECONOMIC STATS
-                  </div>
-                  <div className="report-metric-row">
-                    <span>CapEx Requirement:</span>
-                    <strong>{selectedNode.financialMetrics.capex}/100</strong>
-                  </div>
-                  <div className="report-metric-row">
-                    <span>Attention Yield:</span>
-                    <strong>{selectedNode.financialMetrics.attentionYield}/100</strong>
-                  </div>
-                  <div className="report-metric-row">
-                    <span>Retention Moat:</span>
-                    <strong>{selectedNode.financialMetrics.retentionMoat}/100</strong>
-                  </div>
-                  <div className="report-metric-row" style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                    <span>TAM:</span>
-                    <span style={{ color: '#66fcf1', fontWeight: 700 }}>{selectedNode.financialMetrics.tamRating}</span>
-                  </div>
-                </div>
-
-                {/* Biological Scores */}
-                <div style={{ backgroundColor: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.03)' }}>
-                  <div style={{ fontSize: '10px', color: '#6b7280', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '8px' }}>
-                    BIOLOGICAL STATS
-                  </div>
-                  <div className="report-metric-row">
-                    <span>Cognitive Load:</span>
-                    <strong>{selectedNode.cognitiveLoad}/100</strong>
-                  </div>
-                  <div className="report-metric-row">
-                    <span>Systemic Agency:</span>
-                    <strong>{selectedNode.systemicAgency}/100</strong>
-                  </div>
-                  <div className="report-metric-row">
-                    <span>Sensory Util:</span>
-                    <strong>{selectedNode.sensoryUtilization}/100</strong>
-                  </div>
-                  <div className="report-metric-row" style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                    <span>Avg Mindshare:</span>
-                    <span style={{ color: '#45f3ff', fontWeight: 700 }}>{averageScore}/100</span>
-                  </div>
-                </div>
-
+                <textarea
+                  value={selectedNode.financialMetrics.risks}
+                  onChange={(e) => handleMetaChange('risks', e.target.value)}
+                  className="analyst-textarea custom-scrollbar"
+                  rows={4}
+                  placeholder="Enter risk factors..."
+                />
               </div>
 
             </div>

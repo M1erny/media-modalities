@@ -154,3 +154,104 @@ body {
   font-family: monospace;
 }
 
+/* ─── Analyst Input Custom Controls ───────────────── */
+.analyst-slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.08);
+  outline: none;
+  transition: background 0.15s ease;
+  pointer-events: auto;
+  margin: 6px 0 10px 0;
+}
+
+.analyst-slider:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.analyst-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.1s ease, background-color 0.1s ease;
+}
+
+.analyst-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.3);
+}
+
+/* Axis-specific thumb colors */
+.slider-capex::-webkit-slider-thumb {
+  background-color: #f59e0b;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.5);
+}
+.slider-yield::-webkit-slider-thumb {
+  background-color: #10b981;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
+}
+.slider-moat::-webkit-slider-thumb {
+  background-color: #06b6d4;
+  box-shadow: 0 0 6px rgba(6, 182, 212, 0.5);
+}
+
+.slider-cog::-webkit-slider-thumb {
+  background-color: #ff5555;
+  box-shadow: 0 0 6px rgba(255, 85, 85, 0.5);
+}
+.slider-agency::-webkit-slider-thumb {
+  background-color: #ff2a6d;
+  box-shadow: 0 0 6px rgba(255, 42, 109, 0.5);
+}
+.slider-sensory::-webkit-slider-thumb {
+  background-color: #5555ff;
+  box-shadow: 0 0 6px rgba(85, 85, 255, 0.5);
+}
+
+/* Textareas & Dropdowns */
+.analyst-textarea {
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #e5e7eb;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  outline: none;
+  resize: vertical;
+  transition: all 0.2s;
+  pointer-events: auto;
+}
+
+.analyst-textarea:focus {
+  border-color: rgba(69, 243, 255, 0.35);
+  box-shadow: 0 0 0 2px rgba(69, 243, 255, 0.15);
+  background-color: rgba(0, 0, 0, 0.45);
+}
+
+.analyst-select {
+  background-color: #070a12;
+  color: #e5e7eb;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+  cursor: pointer;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.2s;
+  pointer-events: auto;
+}
+
+.analyst-select:focus {
+  border-color: rgba(69, 243, 255, 0.35);
+}
+
+

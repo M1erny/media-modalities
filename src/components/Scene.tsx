@@ -2,13 +2,14 @@ import React, { useMemo, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Environment, Grid, Text, Billboard, Stars, Line } from '@react-three/drei';
 import * as THREE from 'three';
-import { modalitiesData } from '../data/modalities';
+import type { Modality } from '../data/modalities';
 import { ModalityNode } from './ModalityNode';
 
 interface SceneProps {
   viewMode: 'biological' | 'economic';
   selectedNodeId: string | null;
   onSelectNode: (id: string | null) => void;
+  modalities: Modality[];
 }
 
 const getColorForAgency = (agency: number): string => {
@@ -187,15 +188,20 @@ const DropLine: React.FC<{ targetPos: [number, number, number] }> = ({ targetPos
   );
 };
 
-const DropLines: React.FC<{ viewMode: 'biological' | 'economic' }> = ({ viewMode }) => {
+interface DropLinesProps {
+  viewMode: 'biological' | 'economic';
+  modalities: Modality[];
+}
+
+const DropLines: React.FC<DropLinesProps> = ({ viewMode, modalities }) => {
   const targets = useMemo(() => {
-    return modalitiesData.map((m) => {
+    return modalities.map((m) => {
       const targetPos: [number, number, number] = viewMode === 'economic'
         ? [m.financialMetrics.capex, m.financialMetrics.attentionYield, m.financialMetrics.retentionMoat]
         : [m.cognitiveLoad, m.systemicAgency, m.sensoryUtilization];
       return { id: m.id, pos: targetPos };
     });
-  }, [viewMode]);
+  }, [viewMode, modalities]);
 
   return (
     <group>
@@ -207,35 +213,50 @@ const DropLines: React.FC<{ viewMode: 'biological' | 'economic' }> = ({ viewMode
 };
 
 /* ── Efficient Frontier Line ────────────────────────────────── */
-const EfficientFrontier: React.FC<{ viewMode: 'biological' | 'economic' }> = ({ viewMode }) => {
+interface EfficientFrontierProps {
+  viewMode: 'biological' | 'economic';
+  modalities: Modality[];
+}
+
+const EfficientFrontier: React.FC<EfficientFrontierProps> = ({ viewMode, modalities }) => {
   const points = useMemo(() => {
     let rawPoints: THREE.Vector3[] = [];
-    
+
+    const getNodePos = (id: string, mode: 'biological' | 'economic'): THREE.Vector3 => {
+      const node = modalities.find(n => n.id === id);
+      if (!node) return new THREE.Vector3(0, 0, 0);
+      if (mode === 'economic') {
+        return new THREE.Vector3(node.financialMetrics.capex, node.financialMetrics.attentionYield, node.financialMetrics.retentionMoat);
+      } else {
+        return new THREE.Vector3(node.cognitiveLoad, node.systemicAgency, node.sensoryUtilization);
+      }
+    };
+
     if (viewMode === 'economic') {
       // Optimal assets sorted by capex: TikTok, Social Media, IRL Live Streaming, Podcasts, Grand Strategy, Gen AI
       rawPoints = [
-        new THREE.Vector3(5, 98, 96),   // TikTok
-        new THREE.Vector3(5, 92, 94),   // Social Media
-        new THREE.Vector3(10, 88, 88),  // IRL Live Streaming
-        new THREE.Vector3(15, 80, 70),  // Podcasts
-        new THREE.Vector3(45, 45, 95),  // Grand Strategy
-        new THREE.Vector3(75, 85, 92),  // Gen AI
+        getNodePos('short_form_video', 'economic'),
+        getNodePos('social_media', 'economic'),
+        getNodePos('irl_streaming', 'economic'),
+        getNodePos('podcasts', 'economic'),
+        getNodePos('video_games_grand', 'economic'),
+        getNodePos('gen_ai', 'economic'),
       ];
     } else {
       // Optimal attention path: TikTok, Social Media, IRL Live Streaming, TV Series, Open World Games, Tabletop RPGs
       rawPoints = [
-        new THREE.Vector3(10, 20, 70),  // TikTok
-        new THREE.Vector3(15, 45, 60),  // Social Media
-        new THREE.Vector3(25, 50, 50),  // IRL Live Streaming
-        new THREE.Vector3(45, 5, 70),   // TV Series
-        new THREE.Vector3(65, 85, 85),  // Open World Games
-        new THREE.Vector3(85, 100, 30), // Tabletop RPG
+        getNodePos('short_form_video', 'biological'),
+        getNodePos('social_media', 'biological'),
+        getNodePos('irl_streaming', 'biological'),
+        getNodePos('tv_series', 'biological'),
+        getNodePos('video_games_open', 'biological'),
+        getNodePos('tabletop_rpgs', 'biological'),
       ];
     }
 
     const curve = new THREE.CatmullRomCurve3(rawPoints);
     return curve.getPoints(50);
-  }, [viewMode]);
+  }, [viewMode, modalities]);
 
   const color = viewMode === 'economic' ? '#10b981' : '#06b6d4';
   const labelText = viewMode === 'economic' ? 'Attention Yield Frontier' : 'Optimal Attention Path';
@@ -271,10 +292,11 @@ export const Scene: React.FC<SceneProps> = ({
   viewMode,
   selectedNodeId,
   onSelectNode,
+  modalities,
 }) => {
   const colorMap = useMemo(
-    () => Object.fromEntries(modalitiesData.map((m) => [m.id, getColorForAgency(m.systemicAgency)])),
-    []
+    () => Object.fromEntries(modalities.map((m) => [m.id, getColorForAgency(m.systemicAgency)])),
+    [modalities]
   );
 
   const handleBackgroundClick = () => {
@@ -312,8 +334,8 @@ export const Scene: React.FC<SceneProps> = ({
 
         <Axes viewMode={viewMode} />
         <AxisTicks viewMode={viewMode} />
-        <DropLines viewMode={viewMode} />
-        <EfficientFrontier viewMode={viewMode} />
+        <DropLines viewMode={viewMode} modalities={modalities} />
+        <EfficientFrontier viewMode={viewMode} modalities={modalities} />
 
         {/* 3D Grids */}
         <group>
@@ -359,7 +381,7 @@ export const Scene: React.FC<SceneProps> = ({
 
         {/* Data nodes */}
         <group>
-          {modalitiesData.map((modality) => (
+          {modalities.map((modality) => (
             <ModalityNode
               key={modality.id}
               modality={modality}
