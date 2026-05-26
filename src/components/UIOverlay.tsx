@@ -522,10 +522,17 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
                 marginBottom: '6px',
               }}
             >
-              <div style={{ flex: '1.2' }}>TICKER / FORMAT</div>
-              <div style={{ flex: '1', textAlign: 'right' }}>{viewMode === 'economic' ? 'YIELD' : 'COGNITIVE'}</div>
-              <div style={{ flex: '1', textAlign: 'right' }}>{viewMode === 'economic' ? 'MOAT' : 'AGENCY'}</div>
-              <div style={{ flex: '1.4', textAlign: 'right' }}>RATING</div>
+              <div style={{ flex: '1.5' }}>TICKER / FORMAT</div>
+              <div style={{ flex: '0.8', textAlign: 'right', color: viewMode === 'economic' ? '#f59e0b' : '#ff5555' }}>
+                {viewMode === 'economic' ? 'CAPEX' : 'LOAD'}
+              </div>
+              <div style={{ flex: '0.8', textAlign: 'right', color: viewMode === 'economic' ? '#10b981' : '#ff2a6d' }}>
+                {viewMode === 'economic' ? 'YIELD' : 'AGENCY'}
+              </div>
+              <div style={{ flex: '0.8', textAlign: 'right', color: viewMode === 'economic' ? '#06b6d4' : '#5555ff' }}>
+                {viewMode === 'economic' ? 'MOAT' : 'SENSORY'}
+              </div>
+              <div style={{ flex: '1.2', textAlign: 'right' }}>RATING</div>
             </div>
 
             {/* Scrollable List */}
@@ -547,21 +554,24 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
                       transition: 'all 0.2s',
                     }}
                   >
-                    <div style={{ flex: '1.2', fontWeight: 600, color: '#e5e7eb' }}>
+                    <div style={{ flex: '1.5', fontWeight: 600, color: '#e5e7eb', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '8px' }}>
                       <span style={{ fontSize: '10px', color: '#6b7280', marginRight: '6px', fontFamily: 'monospace' }}>
                         ${item.ticker}
                       </span>
                       {item.name.replace(/ \(.*\)/, '')}
                     </div>
-                    <div style={{ flex: '1', textAlign: 'right', fontFamily: 'monospace', color: '#9ca3af' }}>
-                      {viewMode === 'economic' ? item.financialMetrics.attentionYield : item.cognitiveLoad}
+                    <div style={{ flex: '0.8', textAlign: 'right', fontFamily: 'monospace', color: viewMode === 'economic' ? '#f59e0b' : '#ff5555', fontWeight: 500 }}>
+                      {viewMode === 'economic' ? item.financialMetrics.capex : item.cognitiveLoad}
                     </div>
-                    <div style={{ flex: '1', textAlign: 'right', fontFamily: 'monospace', color: '#9ca3af' }}>
-                      {viewMode === 'economic' ? item.financialMetrics.retentionMoat : item.systemicAgency}
+                    <div style={{ flex: '0.8', textAlign: 'right', fontFamily: 'monospace', color: viewMode === 'economic' ? '#10b981' : '#ff2a6d', fontWeight: 500 }}>
+                      {viewMode === 'economic' ? item.financialMetrics.attentionYield : item.systemicAgency}
+                    </div>
+                    <div style={{ flex: '0.8', textAlign: 'right', fontFamily: 'monospace', color: viewMode === 'economic' ? '#06b6d4' : '#5555ff', fontWeight: 500 }}>
+                      {viewMode === 'economic' ? item.financialMetrics.retentionMoat : item.sensoryUtilization}
                     </div>
                     <div
                       style={{
-                        flex: '1.4',
+                        flex: '1.2',
                         textAlign: 'right',
                         fontWeight: 700,
                         fontSize: '10px',
