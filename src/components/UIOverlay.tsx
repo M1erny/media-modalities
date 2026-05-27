@@ -10,17 +10,6 @@ interface UIOverlayProps {
   onUpdateModality: (updated: Modality) => void;
 }
 
-const getRecommendationColor = (rec: string): string => {
-  switch (rec) {
-    case 'STRONG BUY': return '#10b981';
-    case 'BUY': return '#34d399';
-    case 'HOLD': return '#fbbf24';
-    case 'UNDERPERFORM': return '#f87171';
-    case 'SHORT': return '#ef4444';
-    default: return '#9ca3af';
-  }
-};
-
 export const UIOverlay: React.FC<UIOverlayProps> = ({
   viewMode,
   setViewMode,
@@ -41,22 +30,10 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
 
   // Sorted watchlist for the Bloomberg panel
   const watchList = useMemo(() => {
-    return [...modalities].sort((a, b) => {
-      // Sort priority: STRONG BUY -> BUY -> HOLD -> UNDERPERFORM -> SHORT
-      const priority: Record<string, number> = {
-        'STRONG BUY': 5,
-        'BUY': 4,
-        'HOLD': 3,
-        'UNDERPERFORM': 2,
-        'SHORT': 1,
-      };
-      return (priority[b.financialMetrics.recommendation] || 0) - (priority[a.financialMetrics.recommendation] || 0);
-    });
+    return [...modalities].sort((a, b) => a.name.localeCompare(b.name));
   }, [modalities]);
 
   const totalAssetCount = modalities.length;
-  const strongBuysCount = modalities.filter(m => m.financialMetrics.recommendation === 'STRONG BUY').length;
-  const shortsCount = modalities.filter(m => m.financialMetrics.recommendation === 'SHORT').length;
 
   const handleSliderChange = (key: string, val: number) => {
     if (!selectedNode) return;
@@ -282,46 +259,6 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
               </button>
             </div>
 
-            {/* Interactive Recommendation Rating Banner */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '8px 14px',
-                borderRadius: '10px',
-                backgroundColor: getRecommendationColor(selectedNode.financialMetrics.recommendation) + '15',
-                border: `1px solid ${getRecommendationColor(selectedNode.financialMetrics.recommendation)}33`,
-                marginBottom: '20px',
-              }}
-            >
-              <span style={{ fontSize: '12px', fontWeight: 600, color: '#e5e7eb' }}>Consensus Rating:</span>
-              <select
-                value={selectedNode.financialMetrics.recommendation}
-                onChange={(e) => handleMetaChange('recommendation', e.target.value)}
-                style={{
-                  backgroundColor: '#070a12',
-                  color: getRecommendationColor(selectedNode.financialMetrics.recommendation),
-                  border: `1px solid ${getRecommendationColor(selectedNode.financialMetrics.recommendation)}44`,
-                  borderRadius: '6px',
-                  fontSize: '12px',
-                  fontWeight: 800,
-                  padding: '4px 10px',
-                  cursor: 'pointer',
-                  outline: 'none',
-                  fontFamily: 'inherit',
-                  textAlign: 'right',
-                  letterSpacing: '0.05em',
-                  transition: 'border 0.2s',
-                }}
-              >
-                <option value="STRONG BUY">STRONG BUY</option>
-                <option value="BUY">BUY</option>
-                <option value="HOLD">HOLD</option>
-                <option value="UNDERPERFORM">UNDERPERFORM</option>
-                <option value="SHORT">SHORT</option>
-              </select>
-            </div>
 
             {/* Scrollable Report Content & Sliders */}
             <div style={{ flexGrow: 1, overflowY: 'auto', paddingRight: '4px' }} className="custom-scrollbar">
@@ -503,9 +440,7 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
                 </span>
               </div>
               <div style={{ display: 'flex', gap: '14px', marginTop: '10px', fontSize: '11px', color: '#6b7280' }}>
-                <span>Assets: <strong style={{ color: '#e5e7eb' }}>{totalAssetCount}</strong></span>
-                <span>Strong Buy: <strong style={{ color: '#10b981' }}>{strongBuysCount}</strong></span>
-                <span>Shorts: <strong style={{ color: '#ef4444' }}>{shortsCount}</strong></span>
+                <span>Total Tracked Assets: <strong style={{ color: '#e5e7eb' }}>{totalAssetCount}</strong></span>
               </div>
             </div>
 
@@ -522,7 +457,7 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
                 marginBottom: '6px',
               }}
             >
-              <div style={{ flex: '1.5' }}>TICKER / FORMAT</div>
+              <div style={{ flex: '2' }}>TICKER / FORMAT</div>
               <div style={{ flex: '0.8', textAlign: 'right', color: viewMode === 'economic' ? '#f59e0b' : '#ff5555' }}>
                 {viewMode === 'economic' ? 'CAPEX' : 'LOAD'}
               </div>
@@ -532,13 +467,11 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
               <div style={{ flex: '0.8', textAlign: 'right', color: viewMode === 'economic' ? '#06b6d4' : '#5555ff' }}>
                 {viewMode === 'economic' ? 'MOAT' : 'SENSORY'}
               </div>
-              <div style={{ flex: '1.2', textAlign: 'right' }}>RATING</div>
             </div>
 
             {/* Scrollable List */}
             <div style={{ flexGrow: 1, overflowY: 'auto' }} className="custom-scrollbar">
               {watchList.map((item) => {
-                const recColor = getRecommendationColor(item.financialMetrics.recommendation);
                 return (
                   <div
                     key={item.id}
@@ -554,7 +487,7 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
                       transition: 'all 0.2s',
                     }}
                   >
-                    <div style={{ flex: '1.5', fontWeight: 600, color: '#e5e7eb', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '8px' }}>
+                    <div style={{ flex: '2', fontWeight: 600, color: '#e5e7eb', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '8px' }}>
                       <span style={{ fontSize: '10px', color: '#6b7280', marginRight: '6px', fontFamily: 'monospace' }}>
                         ${item.ticker}
                       </span>
@@ -568,18 +501,6 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
                     </div>
                     <div style={{ flex: '0.8', textAlign: 'right', fontFamily: 'monospace', color: viewMode === 'economic' ? '#06b6d4' : '#5555ff', fontWeight: 500 }}>
                       {viewMode === 'economic' ? item.financialMetrics.retentionMoat : item.sensoryUtilization}
-                    </div>
-                    <div
-                      style={{
-                        flex: '1.2',
-                        textAlign: 'right',
-                        fontWeight: 700,
-                        fontSize: '10px',
-                        color: recColor,
-                        letterSpacing: '0.02em',
-                      }}
-                    >
-                      {item.financialMetrics.recommendation}
                     </div>
                   </div>
                 );
