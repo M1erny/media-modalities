@@ -25,7 +25,7 @@ export const modalitiesData: Modality[] = [
     ticker: "FIC",
     cognitiveLoad: 80,
     systemicAgency: 5,
-    sensoryUtilization: 10,
+    sensoryUtilization: 5,
     financialMetrics: {
       capex: 15,
       attentionYield: 35,
@@ -42,7 +42,7 @@ export const modalitiesData: Modality[] = [
     ticker: "NFX",
     cognitiveLoad: 90,
     systemicAgency: 5,
-    sensoryUtilization: 10,
+    sensoryUtilization: 5,
     financialMetrics: {
       capex: 30,
       attentionYield: 20,
@@ -76,7 +76,7 @@ export const modalitiesData: Modality[] = [
     ticker: "AUD",
     cognitiveLoad: 30,
     systemicAgency: 5,
-    sensoryUtilization: 15,
+    sensoryUtilization: 20,
     financialMetrics: {
       capex: 15,
       attentionYield: 80,
@@ -161,7 +161,7 @@ export const modalitiesData: Modality[] = [
     ticker: "STR",
     cognitiveLoad: 95,
     systemicAgency: 95,
-    sensoryUtilization: 40,
+    sensoryUtilization: 30,
     financialMetrics: {
       capex: 45,
       attentionYield: 45,
@@ -246,7 +246,7 @@ export const modalitiesData: Modality[] = [
     ticker: "THR",
     cognitiveLoad: 55,
     systemicAgency: 5,
-    sensoryUtilization: 65,
+    sensoryUtilization: 60,
     financialMetrics: {
       capex: 65,
       attentionYield: 40,
@@ -297,7 +297,7 @@ export const modalitiesData: Modality[] = [
     ticker: "AMB",
     cognitiveLoad: 5,
     systemicAgency: 0,
-    sensoryUtilization: 25,
+    sensoryUtilization: 15,
     financialMetrics: {
       capex: 5,
       attentionYield: 90,
@@ -348,7 +348,7 @@ export const modalitiesData: Modality[] = [
     ticker: "GAI",
     cognitiveLoad: 70,
     systemicAgency: 90,
-    sensoryUtilization: 25,
+    sensoryUtilization: 20,
     financialMetrics: {
       capex: 75,
       attentionYield: 85,
@@ -416,7 +416,7 @@ export const modalitiesData: Modality[] = [
     ticker: "NFT",
     cognitiveLoad: 40,
     systemicAgency: 35,
-    sensoryUtilization: 60,
+    sensoryUtilization: 25,
     financialMetrics: {
       capex: 20,
       attentionYield: 45,
@@ -433,7 +433,7 @@ export const modalitiesData: Modality[] = [
     ticker: "IVA",
     cognitiveLoad: 50,
     systemicAgency: 70,
-    sensoryUtilization: 15,
+    sensoryUtilization: 20,
     financialMetrics: {
       capex: 25,
       attentionYield: 50,
