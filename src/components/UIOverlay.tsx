@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import type { Modality } from '../data/modalities';
 
 interface UIOverlayProps {
@@ -28,10 +28,87 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
     [selectedNode]
   );
 
+  // Sorting state for the watchlist
+  const [sortField, setSortField] = useState<'name' | 'attr1' | 'attr2' | 'attr3' | 'avg'>('name');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  const handleHeaderClick = (field: 'name' | 'attr1' | 'attr2' | 'attr3' | 'avg') => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection(field === 'name' ? 'asc' : 'desc');
+    }
+  };
+
+  const renderHeader = (
+    label: string,
+    field: 'name' | 'attr1' | 'attr2' | 'attr3' | 'avg',
+    alignment: 'left' | 'right',
+    activeColor?: string
+  ) => {
+    const isActive = sortField === field;
+    const isLeft = alignment === 'left';
+    return (
+      <div
+        onClick={() => handleHeaderClick(field)}
+        style={{
+          flex: field === 'name' ? '1.6' : '0.8',
+          textAlign: alignment,
+          cursor: 'pointer',
+          color: isActive ? (activeColor || '#ffffff') : '#4b5563',
+          display: 'flex',
+          justifyContent: isLeft ? 'flex-start' : 'flex-end',
+          alignItems: 'center',
+          gap: '4px',
+          userSelect: 'none',
+          transition: 'color 0.15s ease',
+        }}
+        className="watchlist-header-col"
+      >
+        <span>{label}</span>
+        {isActive && (
+          <span style={{ fontSize: '9px', color: '#45f3ff', fontFamily: 'monospace' }}>
+            {sortDirection === 'asc' ? '▲' : '▼'}
+          </span>
+        )}
+      </div>
+    );
+  };
+
   // Sorted watchlist for the Bloomberg panel
   const watchList = useMemo(() => {
-    return [...modalities].sort((a, b) => a.name.localeCompare(b.name));
-  }, [modalities]);
+    const getSortValue = (item: Modality) => {
+      switch (sortField) {
+        case 'name':
+          return item.name;
+        case 'attr1':
+          return viewMode === 'economic' ? item.financialMetrics.capex : item.cognitiveLoad;
+        case 'attr2':
+          return viewMode === 'economic' ? item.financialMetrics.attentionYield : item.systemicAgency;
+        case 'attr3':
+          return viewMode === 'economic' ? item.financialMetrics.retentionMoat : item.sensoryUtilization;
+        case 'avg':
+          return viewMode === 'economic'
+            ? (item.financialMetrics.capex + item.financialMetrics.attentionYield + item.financialMetrics.retentionMoat) / 3
+            : (item.cognitiveLoad + item.systemicAgency + item.sensoryUtilization) / 3;
+        default:
+          return 0;
+      }
+    };
+
+    return [...modalities].sort((a, b) => {
+      const valA = getSortValue(a);
+      const valB = getSortValue(b);
+
+      if (typeof valA === 'string' && typeof valB === 'string') {
+        return sortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+      }
+      return sortDirection === 'asc'
+        ? (valA as number) - (valB as number)
+        : (valB as number) - (valA as number);
+    });
+  }, [modalities, sortField, sortDirection, viewMode]);
 
   const totalAssetCount = modalities.length;
 
@@ -457,21 +534,21 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
                 marginBottom: '6px',
               }}
             >
-              <div style={{ flex: '2' }}>TICKER / FORMAT</div>
-              <div style={{ flex: '0.8', textAlign: 'right', color: viewMode === 'economic' ? '#f59e0b' : '#ff5555' }}>
-                {viewMode === 'economic' ? 'CAPEX' : 'LOAD'}
-              </div>
-              <div style={{ flex: '0.8', textAlign: 'right', color: viewMode === 'economic' ? '#10b981' : '#ff2a6d' }}>
-                {viewMode === 'economic' ? 'YIELD' : 'AGENCY'}
-              </div>
-              <div style={{ flex: '0.8', textAlign: 'right', color: viewMode === 'economic' ? '#06b6d4' : '#5555ff' }}>
-                {viewMode === 'economic' ? 'MOAT' : 'SENSORY'}
-              </div>
+              {renderHeader('TICKER / FORMAT', 'name', 'left', '#e5e7eb')}
+              {renderHeader(viewMode === 'economic' ? 'CAPEX' : 'LOAD', 'attr1', 'right', viewMode === 'economic' ? '#f59e0b' : '#ff5555')}
+              {renderHeader(viewMode === 'economic' ? 'YIELD' : 'AGENCY', 'attr2', 'right', viewMode === 'economic' ? '#10b981' : '#ff2a6d')}
+              {renderHeader(viewMode === 'economic' ? 'MOAT' : 'SENSORY', 'attr3', 'right', viewMode === 'economic' ? '#06b6d4' : '#5555ff')}
+              {renderHeader('AVG', 'avg', 'right', '#a855f7')}
             </div>
 
             {/* Scrollable List */}
             <div style={{ flexGrow: 1, overflowY: 'auto' }} className="custom-scrollbar">
               {watchList.map((item) => {
+                const avgVal = Math.round(
+                  viewMode === 'economic'
+                    ? (item.financialMetrics.capex + item.financialMetrics.attentionYield + item.financialMetrics.retentionMoat) / 3
+                    : (item.cognitiveLoad + item.systemicAgency + item.sensoryUtilization) / 3
+                );
                 return (
                   <div
                     key={item.id}
@@ -487,7 +564,7 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
                       transition: 'all 0.2s',
                     }}
                   >
-                    <div style={{ flex: '2', fontWeight: 600, color: '#e5e7eb', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '8px' }}>
+                    <div style={{ flex: '1.6', fontWeight: 600, color: '#e5e7eb', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '8px' }}>
                       <span style={{ fontSize: '10px', color: '#6b7280', marginRight: '6px', fontFamily: 'monospace' }}>
                         ${item.ticker}
                       </span>
@@ -501,6 +578,9 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
                     </div>
                     <div style={{ flex: '0.8', textAlign: 'right', fontFamily: 'monospace', color: viewMode === 'economic' ? '#06b6d4' : '#5555ff', fontWeight: 500 }}>
                       {viewMode === 'economic' ? item.financialMetrics.retentionMoat : item.sensoryUtilization}
+                    </div>
+                    <div style={{ flex: '0.8', textAlign: 'right', fontFamily: 'monospace', color: '#a855f7', fontWeight: 700 }}>
+                      {avgVal}
                     </div>
                   </div>
                 );

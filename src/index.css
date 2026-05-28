@@ -254,4 +254,8 @@ body {
   border-color: rgba(69, 243, 255, 0.35);
 }
 
+.watchlist-header-col:hover {
+  filter: brightness(1.35);
+}
+
 
