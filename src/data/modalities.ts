@@ -178,7 +178,7 @@ export const modalitiesData: Modality[] = [
     ticker: "VRX",
     cognitiveLoad: 70,
     systemicAgency: 75,
-    sensoryUtilization: 95,
+    sensoryUtilization: 80,
     financialMetrics: {
       capex: 80,
       attentionYield: 68,
@@ -263,7 +263,7 @@ export const modalitiesData: Modality[] = [
     ticker: "ESC",
     cognitiveLoad: 85,
     systemicAgency: 85,
-    sensoryUtilization: 80,
+    sensoryUtilization: 90,
     financialMetrics: {
       capex: 55,
       attentionYield: 55,
@@ -314,7 +314,7 @@ export const modalitiesData: Modality[] = [
     ticker: "LRP",
     cognitiveLoad: 75,
     systemicAgency: 90,
-    sensoryUtilization: 85,
+    sensoryUtilization: 98,
     financialMetrics: {
       capex: 25,
       attentionYield: 40,
