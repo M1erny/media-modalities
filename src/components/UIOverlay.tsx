@@ -241,41 +241,79 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
           {viewMode === 'economic' ? (
             <>
               <div style={{ fontSize: '11px', marginBottom: '8px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
-                AXIS GUIDE (ECONOMIC)
+                AXIS GUIDE (ECONOMIC PROJECTION)
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#f59e0b' }} />
-                  <span style={{ color: '#e5e7eb', fontWeight: 500 }}>X: Production Cost (CapEx)</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px', marginBottom: '8px' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#f59e0b' }} />
+                    <span style={{ color: '#e5e7eb', fontWeight: 600 }}>X: Production Cost (CapEx)</span>
+                  </div>
+                  <div style={{ color: '#9ca3af', fontSize: '11px', marginLeft: '16px', marginTop: '2px', lineHeight: '1.4' }}>
+                    Supply-side input barrier. Initial capital, technology, and operational complexity to build/supply the format.
+                  </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981' }} />
-                  <span style={{ color: '#e5e7eb', fontWeight: 500 }}>Y: Attention Yield (ROI)</span>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981' }} />
+                    <span style={{ color: '#e5e7eb', fontWeight: 600 }}>Y: Attention Yield (ROI)</span>
+                  </div>
+                  <div style={{ color: '#9ca3af', fontSize: '11px', marginLeft: '16px', marginTop: '2px', lineHeight: '1.4' }}>
+                    Throughput capture efficiency. Immediate attention conversion velocity and return rate per unit of exposure.
+                  </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#06b6d4' }} />
-                  <span style={{ color: '#e5e7eb', fontWeight: 500 }}>Z: Retention Moat (LTV)</span>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#06b6d4' }} />
+                    <span style={{ color: '#e5e7eb', fontWeight: 600 }}>Z: Retention Moat (LTV)</span>
+                  </div>
+                  <div style={{ color: '#9ca3af', fontSize: '11px', marginLeft: '16px', marginTop: '2px', lineHeight: '1.4' }}>
+                    Output defensibility value. Switching costs, community network effects, and lifetime asset stickiness.
+                  </div>
                 </div>
+              </div>
+              <div style={{ width: '100%', height: '1px', backgroundColor: 'rgba(255,255,255,0.05)', margin: '12px 0' }} />
+              <div style={{ fontSize: '10px', color: '#6b7280', lineHeight: '1.4' }}>
+                <strong style={{ color: '#8892b0' }}>MECE Framework:</strong> Mapped as a mutually exclusive and collectively exhaustive system of <span style={{ color: '#e5e7eb' }}>Input Cost</span> (X), <span style={{ color: '#e5e7eb' }}>Conversion Flow</span> (Y), and <span style={{ color: '#e5e7eb' }}>Defensible Moat Asset Value</span> (Z).
               </div>
             </>
           ) : (
             <>
               <div style={{ fontSize: '11px', marginBottom: '8px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
-                AXIS GUIDE (BIOLOGICAL)
+                AXIS GUIDE (BIOLOGICAL PROJECTION)
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#ff5555' }} />
-                  <span style={{ color: '#e5e7eb', fontWeight: 500 }}>X: Cognitive Load</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px', marginBottom: '8px' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#ff5555' }} />
+                    <span style={{ color: '#e5e7eb', fontWeight: 600 }}>X: Cognitive Load</span>
+                  </div>
+                  <div style={{ color: '#9ca3af', fontSize: '11px', marginLeft: '16px', marginTop: '2px', lineHeight: '1.4' }}>
+                    Central processing throughput. Mental effort, working memory, and semantic focus required by the brain.
+                  </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#55ff55' }} />
-                  <span style={{ color: '#e5e7eb', fontWeight: 500 }}>Y: Systemic Agency</span>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#55ff55' }} />
+                    <span style={{ color: '#e5e7eb', fontWeight: 600 }}>Y: Systemic Agency</span>
+                  </div>
+                  <div style={{ color: '#9ca3af', fontSize: '11px', marginLeft: '16px', marginTop: '2px', lineHeight: '1.4' }}>
+                    Motor output control. The degree of user decision-making influence and feedback loops onto the medium.
+                  </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#5555ff' }} />
-                  <span style={{ color: '#e5e7eb', fontWeight: 500 }}>Z: Sensory Utilization</span>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#5555ff' }} />
+                    <span style={{ color: '#e5e7eb', fontWeight: 600 }}>Z: Sensory Utilization</span>
+                  </div>
+                  <div style={{ color: '#9ca3af', fontSize: '11px', marginLeft: '16px', marginTop: '2px', lineHeight: '1.4' }}>
+                    Perceptual input bandwidth. Number and density of physical sensory channels engaged (ceiling = physical reality).
+                  </div>
                 </div>
+              </div>
+              <div style={{ width: '100%', height: '1px', backgroundColor: 'rgba(255,255,255,0.05)', margin: '12px 0' }} />
+              <div style={{ fontSize: '10px', color: '#6b7280', lineHeight: '1.4' }}>
+                <strong style={{ color: '#8892b0' }}>Neural Loop (MECE):</strong> The biological axes exhaustively model the neural feedback loop: <span style={{ color: '#e5e7eb' }}>Sensory Input Bandwidth</span> (Z), <span style={{ color: '#e5e7eb' }}>Cognitive Compute Load</span> (X), and <span style={{ color: '#e5e7eb' }}>Agency Output Control</span> (Y).
               </div>
             </>
           )}
