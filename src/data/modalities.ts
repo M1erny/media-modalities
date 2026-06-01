@@ -8,6 +8,12 @@ export interface FinancialMetrics {
   risks: string;
 }
 
+export interface SensoryComposition {
+  visual: number;    // % visual engagement (0-100)
+  auditory: number;  // % auditory engagement (0-100)
+  physical: number;  // % physical/tactile engagement (0-100)
+}
+
 export interface Modality {
   id: string;
   name: string;
@@ -15,6 +21,7 @@ export interface Modality {
   cognitiveLoad: number;      // x axis (biological)
   systemicAgency: number;     // y axis (biological)
   sensoryUtilization: number;  // z axis (biological)
+  sensoryComposition: SensoryComposition;
   financialMetrics: FinancialMetrics;
 }
 
@@ -26,6 +33,7 @@ export const modalitiesData: Modality[] = [
     cognitiveLoad: 80,
     systemicAgency: 5,
     sensoryUtilization: 5,
+    sensoryComposition: { visual: 90, auditory: 0, physical: 10 },
     financialMetrics: {
       capex: 15,
       attentionYield: 35,
@@ -43,6 +51,7 @@ export const modalitiesData: Modality[] = [
     cognitiveLoad: 90,
     systemicAgency: 5,
     sensoryUtilization: 5,
+    sensoryComposition: { visual: 90, auditory: 0, physical: 10 },
     financialMetrics: {
       capex: 30,
       attentionYield: 20,
@@ -60,6 +69,7 @@ export const modalitiesData: Modality[] = [
     cognitiveLoad: 50,
     systemicAgency: 5,
     sensoryUtilization: 35,
+    sensoryComposition: { visual: 90, auditory: 0, physical: 10 },
     financialMetrics: {
       capex: 35,
       attentionYield: 60,
@@ -77,6 +87,7 @@ export const modalitiesData: Modality[] = [
     cognitiveLoad: 30,
     systemicAgency: 5,
     sensoryUtilization: 20,
+    sensoryComposition: { visual: 0, auditory: 95, physical: 5 },
     financialMetrics: {
       capex: 15,
       attentionYield: 80,
@@ -94,6 +105,7 @@ export const modalitiesData: Modality[] = [
     cognitiveLoad: 40,
     systemicAgency: 5,
     sensoryUtilization: 75,
+    sensoryComposition: { visual: 60, auditory: 40, physical: 0 },
     financialMetrics: {
       capex: 95,
       attentionYield: 55,
@@ -111,6 +123,7 @@ export const modalitiesData: Modality[] = [
     cognitiveLoad: 45,
     systemicAgency: 5,
     sensoryUtilization: 70,
+    sensoryComposition: { visual: 60, auditory: 40, physical: 0 },
     financialMetrics: {
       capex: 80,
       attentionYield: 65,
@@ -128,6 +141,7 @@ export const modalitiesData: Modality[] = [
     cognitiveLoad: 60,
     systemicAgency: 65,
     sensoryUtilization: 80,
+    sensoryComposition: { visual: 50, auditory: 30, physical: 20 },
     financialMetrics: {
       capex: 70,
       attentionYield: 75,
@@ -145,6 +159,7 @@ export const modalitiesData: Modality[] = [
     cognitiveLoad: 65,
     systemicAgency: 85,
     sensoryUtilization: 85,
+    sensoryComposition: { visual: 45, auditory: 30, physical: 25 },
     financialMetrics: {
       capex: 90,
       attentionYield: 82,
@@ -162,6 +177,7 @@ export const modalitiesData: Modality[] = [
     cognitiveLoad: 95,
     systemicAgency: 95,
     sensoryUtilization: 30,
+    sensoryComposition: { visual: 65, auditory: 15, physical: 20 },
     financialMetrics: {
       capex: 45,
       attentionYield: 45,
@@ -179,6 +195,7 @@ export const modalitiesData: Modality[] = [
     cognitiveLoad: 70,
     systemicAgency: 75,
     sensoryUtilization: 80,
+    sensoryComposition: { visual: 50, auditory: 35, physical: 15 },
     financialMetrics: {
       capex: 80,
       attentionYield: 68,
@@ -196,6 +213,7 @@ export const modalitiesData: Modality[] = [
     cognitiveLoad: 15,
     systemicAgency: 45,
     sensoryUtilization: 60,
+    sensoryComposition: { visual: 70, auditory: 20, physical: 10 },
     financialMetrics: {
       capex: 5,
       attentionYield: 92,
@@ -213,6 +231,7 @@ export const modalitiesData: Modality[] = [
     cognitiveLoad: 85,
     systemicAgency: 100,
     sensoryUtilization: 30,
+    sensoryComposition: { visual: 30, auditory: 60, physical: 10 },
     financialMetrics: {
       capex: 10,
       attentionYield: 50,
@@ -230,6 +249,7 @@ export const modalitiesData: Modality[] = [
     cognitiveLoad: 10,
     systemicAgency: 20,
     sensoryUtilization: 70,
+    sensoryComposition: { visual: 55, auditory: 35, physical: 10 },
     financialMetrics: {
       capex: 5,
       attentionYield: 98,
@@ -247,6 +267,7 @@ export const modalitiesData: Modality[] = [
     cognitiveLoad: 55,
     systemicAgency: 5,
     sensoryUtilization: 60,
+    sensoryComposition: { visual: 50, auditory: 45, physical: 5 },
     financialMetrics: {
       capex: 65,
       attentionYield: 40,
@@ -264,6 +285,7 @@ export const modalitiesData: Modality[] = [
     cognitiveLoad: 85,
     systemicAgency: 85,
     sensoryUtilization: 90,
+    sensoryComposition: { visual: 30, auditory: 15, physical: 55 },
     financialMetrics: {
       capex: 55,
       attentionYield: 55,
@@ -281,6 +303,7 @@ export const modalitiesData: Modality[] = [
     cognitiveLoad: 75,
     systemicAgency: 80,
     sensoryUtilization: 15,
+    sensoryComposition: { visual: 80, auditory: 5, physical: 15 },
     financialMetrics: {
       capex: 15,
       attentionYield: 70,
@@ -298,6 +321,7 @@ export const modalitiesData: Modality[] = [
     cognitiveLoad: 5,
     systemicAgency: 0,
     sensoryUtilization: 15,
+    sensoryComposition: { visual: 0, auditory: 100, physical: 0 },
     financialMetrics: {
       capex: 5,
       attentionYield: 90,
@@ -315,6 +339,7 @@ export const modalitiesData: Modality[] = [
     cognitiveLoad: 75,
     systemicAgency: 90,
     sensoryUtilization: 98,
+    sensoryComposition: { visual: 30, auditory: 30, physical: 40 },
     financialMetrics: {
       capex: 25,
       attentionYield: 40,
@@ -332,6 +357,7 @@ export const modalitiesData: Modality[] = [
     cognitiveLoad: 15,
     systemicAgency: 5,
     sensoryUtilization: 95,
+    sensoryComposition: { visual: 30, auditory: 20, physical: 50 },
     financialMetrics: {
       capex: 98,
       attentionYield: 58,
@@ -349,6 +375,7 @@ export const modalitiesData: Modality[] = [
     cognitiveLoad: 70,
     systemicAgency: 90,
     sensoryUtilization: 20,
+    sensoryComposition: { visual: 75, auditory: 5, physical: 20 },
     financialMetrics: {
       capex: 75,
       attentionYield: 85,
@@ -366,6 +393,7 @@ export const modalitiesData: Modality[] = [
     cognitiveLoad: 65,
     systemicAgency: 5,
     sensoryUtilization: 45,
+    sensoryComposition: { visual: 60, auditory: 40, physical: 0 },
     financialMetrics: {
       capex: 30,
       attentionYield: 35,
@@ -383,6 +411,7 @@ export const modalitiesData: Modality[] = [
     cognitiveLoad: 25,
     systemicAgency: 50,
     sensoryUtilization: 50,
+    sensoryComposition: { visual: 50, auditory: 45, physical: 5 },
     financialMetrics: {
       capex: 10,
       attentionYield: 88,
@@ -400,6 +429,7 @@ export const modalitiesData: Modality[] = [
     cognitiveLoad: 75,
     systemicAgency: 80,
     sensoryUtilization: 40,
+    sensoryComposition: { visual: 65, auditory: 15, physical: 20 },
     financialMetrics: {
       capex: 55,
       attentionYield: 60,
@@ -417,6 +447,7 @@ export const modalitiesData: Modality[] = [
     cognitiveLoad: 40,
     systemicAgency: 35,
     sensoryUtilization: 25,
+    sensoryComposition: { visual: 90, auditory: 5, physical: 5 },
     financialMetrics: {
       capex: 20,
       attentionYield: 45,
@@ -434,6 +465,7 @@ export const modalitiesData: Modality[] = [
     cognitiveLoad: 50,
     systemicAgency: 70,
     sensoryUtilization: 20,
+    sensoryComposition: { visual: 0, auditory: 85, physical: 15 },
     financialMetrics: {
       capex: 25,
       attentionYield: 50,

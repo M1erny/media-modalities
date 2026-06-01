@@ -12,10 +12,17 @@ interface SceneProps {
   modalities: Modality[];
 }
 
-const getColorForAgency = (agency: number): string => {
-  const c1 = new THREE.Color('#45f3ff');
-  const c2 = new THREE.Color('#ff2a6d');
-  return '#' + c1.clone().lerp(c2, agency / 100).getHexString();
+const getColorForSensory = (visual: number, auditory: number, physical: number): string => {
+  const cVisual = new THREE.Color('#00f0ff');   // Cyan
+  const cAuditory = new THREE.Color('#ffb700'); // Amber
+  const cPhysical = new THREE.Color('#ff0055'); // Magenta
+
+  const r = (cVisual.r * visual + cAuditory.r * auditory + cPhysical.r * physical) / 100;
+  const g = (cVisual.g * visual + cAuditory.g * auditory + cPhysical.g * physical) / 100;
+  const b = (cVisual.b * visual + cAuditory.b * auditory + cPhysical.b * physical) / 100;
+
+  const finalColor = new THREE.Color(r, g, b);
+  return '#' + finalColor.getHexString();
 };
 
 /* ── Axis Ticks component with dynamic colors ────────────────── */
@@ -295,7 +302,7 @@ export const Scene: React.FC<SceneProps> = ({
   modalities,
 }) => {
   const colorMap = useMemo(
-    () => Object.fromEntries(modalities.map((m) => [m.id, getColorForAgency(m.systemicAgency)])),
+    () => Object.fromEntries(modalities.map((m) => [m.id, getColorForSensory(m.sensoryComposition.visual, m.sensoryComposition.auditory, m.sensoryComposition.physical)])),
     [modalities]
   );
 

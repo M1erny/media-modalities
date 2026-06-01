@@ -320,19 +320,32 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
           <div style={{ width: '100%', height: '1px', backgroundColor: 'rgba(255,255,255,0.05)', margin: '12px 0' }} />
           
           <div style={{ fontSize: '11px', marginBottom: '8px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
-            NODE COLOR INDEX (SYSTEMIC AGENCY)
+            NODE COLOR INDEX (SENSORY COMPOSITION)
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '11px', color: '#45f3ff', fontWeight: 500 }}>Low Agency</span>
-            <div
-              style={{
-                flexGrow: 1,
-                height: '6px',
-                borderRadius: '3px',
-                background: 'linear-gradient(to right, #45f3ff, #a855f7, #ff2a6d)',
-              }}
-            />
-            <span style={{ fontSize: '11px', color: '#ff2a6d', fontWeight: 500 }}>High Agency</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '11px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ width: '12px', height: '6px', borderRadius: '3px', backgroundColor: '#00f0ff' }} />
+              <span style={{ color: '#e5e7eb' }}>Visual Dominant (Cyan)</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ width: '12px', height: '6px', borderRadius: '3px', backgroundColor: '#ffb700' }} />
+              <span style={{ color: '#e5e7eb' }}>Auditory Dominant (Amber)</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ width: '12px', height: '6px', borderRadius: '3px', backgroundColor: '#ff0055' }} />
+              <span style={{ color: '#e5e7eb' }}>Physical Dominant (Magenta)</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div
+                style={{
+                  width: '12px',
+                  height: '6px',
+                  borderRadius: '3px',
+                  background: 'linear-gradient(to right, #00f0ff, #ffb700, #ff0055)',
+                }}
+              />
+              <span style={{ color: '#e5e7eb' }}>Mixed Formats (Blended)</span>
+            </div>
           </div>
         </div>
       </div>
@@ -377,6 +390,23 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
 
             {/* Scrollable Report Content & Sliders */}
             <div style={{ flexGrow: 1, overflowY: 'auto', paddingRight: '4px' }} className="custom-scrollbar">
+              
+              {/* Sensory Composition Profile Stack Bar */}
+              <div style={{ marginBottom: '20px', backgroundColor: 'rgba(0,0,0,0.15)', padding: '14px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.02)' }}>
+                <div style={{ fontSize: '10px', color: '#6b7280', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '8px' }}>
+                  SENSORY COMPOSITION PROFILE
+                </div>
+                <div style={{ display: 'flex', height: '8px', borderRadius: '4px', overflow: 'hidden', marginBottom: '10px' }}>
+                  <div style={{ width: `${selectedNode.sensoryComposition.visual}%`, backgroundColor: '#00f0ff' }} />
+                  <div style={{ width: `${selectedNode.sensoryComposition.auditory}%`, backgroundColor: '#ffb700' }} />
+                  <div style={{ width: `${selectedNode.sensoryComposition.physical}%`, backgroundColor: '#ff0055' }} />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#9ca3af', fontFamily: 'monospace' }}>
+                  <span style={{ color: '#00f0ff' }}>VIS: {selectedNode.sensoryComposition.visual}%</span>
+                  <span style={{ color: '#ffb700' }}>AUD: {selectedNode.sensoryComposition.auditory}%</span>
+                  <span style={{ color: '#ff0055' }}>PHY: {selectedNode.sensoryComposition.physical}%</span>
+                </div>
+              </div>
               
               {/* Parameter Adjustments (Dynamic Sliders) */}
               <div style={{ marginBottom: '22px' }}>
