@@ -1,15 +1,19 @@
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo, useRef, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Environment, Grid, Text, Billboard, Stars, Line } from '@react-three/drei';
+import type { OrbitControls as OrbitControlsType } from 'three-stdlib';
 import * as THREE from 'three';
 import type { Modality } from '../data/modalities';
 import { ModalityNode } from './ModalityNode';
+
+export type CameraPreset = 'isometric' | 'xy' | 'zy' | 'xz' | 'frontier';
 
 interface SceneProps {
   viewMode: 'biological' | 'economic';
   selectedNodeId: string | null;
   onSelectNode: (id: string | null) => void;
   modalities: Modality[];
+  cameraPreset?: CameraPreset;
 }
 
 const getColorForSensory = (visual: number, auditory: number, physical: number): string => {
@@ -25,7 +29,79 @@ const getColorForSensory = (visual: number, auditory: number, physical: number):
   return '#' + finalColor.getHexString();
 };
 
-/* ── Axis Ticks component with dynamic colors ────────────────── */
+/* ── Camera Controller Component ───────────────────────────── */
+const CameraController: React.FC<{
+  cameraPreset: CameraPreset;
+  selectedNode: Modality | null;
+  viewMode: 'biological' | 'economic';
+}> = ({ cameraPreset, selectedNode, viewMode }) => {
+  const controlsRef = useRef<OrbitControlsType>(null);
+  const targetCamPos = useRef(new THREE.Vector3(140, 95, 140));
+  const targetLookAt = useRef(new THREE.Vector3(50, 45, 50));
+
+  // Determine camera targets based on active preset
+  useEffect(() => {
+    switch (cameraPreset) {
+      case 'xy':
+        targetCamPos.current.set(50, 50, 210);
+        targetLookAt.current.set(50, 50, 0);
+        break;
+      case 'zy':
+        targetCamPos.current.set(210, 50, 50);
+        targetLookAt.current.set(0, 50, 50);
+        break;
+      case 'xz':
+        targetCamPos.current.set(50, 210, 50);
+        targetLookAt.current.set(50, 0, 50);
+        break;
+      case 'frontier':
+        targetCamPos.current.set(110, 80, 160);
+        targetLookAt.current.set(45, 55, 45);
+        break;
+      case 'isometric':
+      default:
+        targetCamPos.current.set(140, 95, 140);
+        targetLookAt.current.set(50, 45, 50);
+        break;
+    }
+  }, [cameraPreset]);
+
+  // Adjust focus when a node is selected
+  useEffect(() => {
+    if (selectedNode) {
+      const nodeX = viewMode === 'economic' ? selectedNode.financialMetrics.capex : selectedNode.cognitiveLoad;
+      const nodeY = viewMode === 'economic' ? selectedNode.financialMetrics.attentionYield : selectedNode.systemicAgency;
+      const nodeZ = viewMode === 'economic' ? selectedNode.financialMetrics.retentionMoat : selectedNode.sensoryUtilization;
+      
+      targetLookAt.current.set(nodeX, nodeY, nodeZ);
+    }
+  }, [selectedNode, viewMode]);
+
+  useFrame(({ camera }, delta) => {
+    if (!controlsRef.current) return;
+
+    // Smoothly lerp camera position
+    camera.position.lerp(targetCamPos.current, delta * 3.5);
+
+    // Smoothly lerp orbit controls target
+    controlsRef.current.target.lerp(targetLookAt.current, delta * 3.5);
+    controlsRef.current.update();
+  });
+
+  return (
+    <OrbitControls
+      ref={controlsRef}
+      enableDamping
+      dampingFactor={0.06}
+      minDistance={30}
+      maxDistance={400}
+      target={[50, 45, 50]}
+      rotateSpeed={0.6}
+    />
+  );
+};
+
+/* ── Axis Ticks Component ────────────────────────────────────── */
 const AxisTicks: React.FC<{ viewMode: 'biological' | 'economic' }> = ({ viewMode }) => {
   const ticks = [0, 25, 50, 75, 100];
 
@@ -33,7 +109,7 @@ const AxisTicks: React.FC<{ viewMode: 'biological' | 'economic' }> = ({ viewMode
     if (viewMode === 'economic') {
       return { x: '#f59e0b', y: '#10b981', z: '#06b6d4' };
     }
-    return { x: '#ff8888', y: '#88ff88', z: '#8888ff' };
+    return { x: '#ff5555', y: '#ff2a6d', z: '#5555ff' };
   }, [viewMode]);
 
   return (
@@ -42,15 +118,15 @@ const AxisTicks: React.FC<{ viewMode: 'biological' | 'economic' }> = ({ viewMode
         <React.Fragment key={`tick-${v}`}>
           {/* X axis ticks */}
           <Billboard position={[v, -4, 0]}>
-            <Text color={colors.x} fontSize={2.2} anchorX="center" anchorY="middle">{v}</Text>
+            <Text color={colors.x} fontSize={2.4} font="" anchorX="center" anchorY="middle">{v}</Text>
           </Billboard>
           {/* Y axis ticks */}
           <Billboard position={[-4, v, 0]}>
-            <Text color={colors.y} fontSize={2.2} anchorX="center" anchorY="middle">{v}</Text>
+            <Text color={colors.y} fontSize={2.4} font="" anchorX="center" anchorY="middle">{v}</Text>
           </Billboard>
           {/* Z axis ticks */}
           <Billboard position={[-4, 0, v]}>
-            <Text color={colors.z} fontSize={2.2} anchorX="center" anchorY="middle">{v}</Text>
+            <Text color={colors.z} fontSize={2.4} font="" anchorX="center" anchorY="middle">{v}</Text>
           </Billboard>
         </React.Fragment>
       ))}
@@ -58,10 +134,44 @@ const AxisTicks: React.FC<{ viewMode: 'biological' | 'economic' }> = ({ viewMode
   );
 };
 
-/* ── 3D Axes with separated High / Low labels ───────────────── */
-const Axes: React.FC<{ viewMode: 'biological' | 'economic' }> = ({ viewMode }) => {
-  const axisOpacity = 0.6;
+/* ── 3D Coordinate Bounding Wireframe ────────────────────────── */
+const CoordinateBoundingBox: React.FC = () => {
+  const lines = useMemo(() => {
+    // 12 edges of the 100x100x100 bounding cube
+    const pts: [number, number, number][][] = [
+      [[0, 100, 0], [100, 100, 0]],
+      [[100, 100, 0], [100, 100, 100]],
+      [[100, 100, 100], [0, 100, 100]],
+      [[0, 100, 100], [0, 100, 0]],
+      
+      [[100, 0, 0], [100, 0, 100]],
+      [[100, 0, 100], [0, 0, 100]],
+      
+      [[100, 0, 0], [100, 100, 0]],
+      [[100, 0, 100], [100, 100, 100]],
+      [[0, 0, 100], [0, 100, 100]],
+    ];
+    return pts;
+  }, []);
 
+  return (
+    <group>
+      {lines.map((edge, idx) => (
+        <Line
+          key={`box-edge-${idx}`}
+          points={edge}
+          color="#1f293d"
+          lineWidth={1.0}
+          transparent
+          opacity={0.35}
+        />
+      ))}
+    </group>
+  );
+};
+
+/* ── 3D Axes with Directional Glow Cones ──────────────────────── */
+const Axes: React.FC<{ viewMode: 'biological' | 'economic' }> = ({ viewMode }) => {
   const config = useMemo(() => {
     if (viewMode === 'economic') {
       return {
@@ -75,7 +185,7 @@ const Axes: React.FC<{ viewMode: 'biological' | 'economic' }> = ({ viewMode }) =
     }
     return {
       xColor: '#ff5555',
-      yColor: '#55ff55',
+      yColor: '#ff2a6d',
       zColor: '#5555ff',
       xLabel: 'Cognitive Load',
       yLabel: 'Systemic Agency',
@@ -87,63 +197,63 @@ const Axes: React.FC<{ viewMode: 'biological' | 'economic' }> = ({ viewMode }) =
     <group>
       {/* ─── X Axis (horizontal) ─── */}
       <mesh position={[50, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <cylinderGeometry args={[0.15, 0.15, 100]} />
-        <meshBasicMaterial color={config.xColor} transparent opacity={axisOpacity} />
+        <cylinderGeometry args={[0.2, 0.2, 100]} />
+        <meshBasicMaterial color={config.xColor} transparent opacity={0.8} />
       </mesh>
       <mesh position={[100, 0, 0]} rotation={[0, 0, -Math.PI / 2]}>
-        <coneGeometry args={[0.8, 2.5, 12]} />
+        <coneGeometry args={[0.9, 3.0, 16]} />
         <meshBasicMaterial color={config.xColor} />
       </mesh>
-      <Billboard position={[108, 0, 0]}>
-        <Text color={config.xColor} fontSize={2.5} anchorX="center" anchorY="middle">High</Text>
+      <Billboard position={[109, 0, 0]}>
+        <Text color={config.xColor} fontSize={2.8} anchorX="center" anchorY="middle" fontWeight="bold">High</Text>
       </Billboard>
       <Billboard position={[-8, 0, 0]}>
         <Text color={config.xColor} fontSize={2.5} anchorX="center" anchorY="middle">Low</Text>
       </Billboard>
       <Billboard position={[50, -12, 0]}>
-        <Text color={config.xColor} fontSize={3.5} anchorX="center" anchorY="middle" fontWeight="bold">
+        <Text color={config.xColor} fontSize={3.8} anchorX="center" anchorY="middle" fontWeight="bold">
           {config.xLabel}
         </Text>
       </Billboard>
 
       {/* ─── Y Axis (vertical) ─── */}
       <mesh position={[0, 50, 0]}>
-        <cylinderGeometry args={[0.15, 0.15, 100]} />
-        <meshBasicMaterial color={config.yColor} transparent opacity={axisOpacity} />
+        <cylinderGeometry args={[0.2, 0.2, 100]} />
+        <meshBasicMaterial color={config.yColor} transparent opacity={0.8} />
       </mesh>
       <mesh position={[0, 100, 0]}>
-        <coneGeometry args={[0.8, 2.5, 12]} />
+        <coneGeometry args={[0.9, 3.0, 16]} />
         <meshBasicMaterial color={config.yColor} />
       </mesh>
-      <Billboard position={[0, 108, 0]}>
-        <Text color={config.yColor} fontSize={2.5} anchorX="center" anchorY="middle">High</Text>
+      <Billboard position={[0, 109, 0]}>
+        <Text color={config.yColor} fontSize={2.8} anchorX="center" anchorY="middle" fontWeight="bold">High</Text>
       </Billboard>
       <Billboard position={[0, -8, 0]}>
         <Text color={config.yColor} fontSize={2.5} anchorX="center" anchorY="middle">Low</Text>
       </Billboard>
       <Billboard position={[-18, 50, 0]}>
-        <Text color={config.yColor} fontSize={3.5} anchorX="center" anchorY="middle" fontWeight="bold">
+        <Text color={config.yColor} fontSize={3.8} anchorX="center" anchorY="middle" fontWeight="bold">
           {config.yLabel}
         </Text>
       </Billboard>
 
       {/* ─── Z Axis (depth) ─── */}
       <mesh position={[0, 0, 50]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.15, 0.15, 100]} />
-        <meshBasicMaterial color={config.zColor} transparent opacity={axisOpacity} />
+        <cylinderGeometry args={[0.2, 0.2, 100]} />
+        <meshBasicMaterial color={config.zColor} transparent opacity={0.8} />
       </mesh>
       <mesh position={[0, 0, 100]} rotation={[Math.PI / 2, 0, 0]}>
-        <coneGeometry args={[0.8, 2.5, 12]} />
+        <coneGeometry args={[0.9, 3.0, 16]} />
         <meshBasicMaterial color={config.zColor} />
       </mesh>
-      <Billboard position={[0, 0, 108]}>
-        <Text color={config.zColor} fontSize={2.5} anchorX="center" anchorY="middle">High</Text>
+      <Billboard position={[0, 0, 109]}>
+        <Text color={config.zColor} fontSize={2.8} anchorX="center" anchorY="middle" fontWeight="bold">High</Text>
       </Billboard>
       <Billboard position={[0, 0, -8]}>
         <Text color={config.zColor} fontSize={2.5} anchorX="center" anchorY="middle">Low</Text>
       </Billboard>
       <Billboard position={[0, -12, 50]}>
-        <Text color={config.zColor} fontSize={3.5} anchorX="center" anchorY="middle" fontWeight="bold">
+        <Text color={config.zColor} fontSize={3.8} anchorX="center" anchorY="middle" fontWeight="bold">
           {config.zLabel}
         </Text>
       </Billboard>
@@ -151,8 +261,8 @@ const Axes: React.FC<{ viewMode: 'biological' | 'economic' }> = ({ viewMode }) =
   );
 };
 
-/* ── Smoothly animating Drop Line component ────────────────── */
-const DropLine: React.FC<{ targetPos: [number, number, number] }> = ({ targetPos }) => {
+/* ── Smoothly Animating Drop Line Component ─────────────────── */
+const DropLine: React.FC<{ targetPos: [number, number, number]; isSelected: boolean }> = ({ targetPos, isSelected }) => {
   const lineRef = useRef<any>(null);
   const currentPos = useRef(new THREE.Vector3(targetPos[0], targetPos[1], targetPos[2]));
 
@@ -163,11 +273,9 @@ const DropLine: React.FC<{ targetPos: [number, number, number] }> = ({ targetPos
 
     if (lineRef.current) {
       const positions = lineRef.current.geometry.attributes.position.array;
-      // Start (node position)
       positions[0] = currentPos.current.x;
       positions[1] = currentPos.current.y;
       positions[2] = currentPos.current.z;
-      // End (floor plane, Y=0)
       positions[3] = currentPos.current.x;
       positions[4] = 0;
       positions[5] = currentPos.current.z;
@@ -190,42 +298,24 @@ const DropLine: React.FC<{ targetPos: [number, number, number] }> = ({ targetPos
           args={[initialPoints, 3]}
         />
       </bufferGeometry>
-      <lineBasicMaterial color="#ffffff" transparent opacity={0.06} />
+      <lineBasicMaterial
+        color={isSelected ? '#00f0ff' : '#ffffff'}
+        transparent
+        opacity={isSelected ? 0.35 : 0.08}
+      />
     </line>
   );
 };
 
-interface DropLinesProps {
-  viewMode: 'biological' | 'economic';
-  modalities: Modality[];
-}
-
-const DropLines: React.FC<DropLinesProps> = ({ viewMode, modalities }) => {
-  const targets = useMemo(() => {
-    return modalities.map((m) => {
-      const targetPos: [number, number, number] = viewMode === 'economic'
-        ? [m.financialMetrics.capex, m.financialMetrics.attentionYield, m.financialMetrics.retentionMoat]
-        : [m.cognitiveLoad, m.systemicAgency, m.sensoryUtilization];
-      return { id: m.id, pos: targetPos };
-    });
-  }, [viewMode, modalities]);
-
-  return (
-    <group>
-      {targets.map((t) => (
-        <DropLine key={t.id + '-drop'} targetPos={t.pos} />
-      ))}
-    </group>
-  );
-};
-
-/* ── Efficient Frontier Line ────────────────────────────────── */
+/* ── Efficient Frontier Line with Animated Pulse ────────────── */
 interface EfficientFrontierProps {
   viewMode: 'biological' | 'economic';
   modalities: Modality[];
 }
 
 const EfficientFrontier: React.FC<EfficientFrontierProps> = ({ viewMode, modalities }) => {
+  const lineRef = useRef<any>(null);
+
   const points = useMemo(() => {
     let rawPoints: THREE.Vector3[] = [];
 
@@ -240,7 +330,6 @@ const EfficientFrontier: React.FC<EfficientFrontierProps> = ({ viewMode, modalit
     };
 
     if (viewMode === 'economic') {
-      // Optimal assets sorted by capex: TikTok, Social Media, IRL Live Streaming, Podcasts, Grand Strategy, Gen AI
       rawPoints = [
         getNodePos('short_form_video', 'economic'),
         getNodePos('social_media', 'economic'),
@@ -250,7 +339,6 @@ const EfficientFrontier: React.FC<EfficientFrontierProps> = ({ viewMode, modalit
         getNodePos('gen_ai', 'economic'),
       ];
     } else {
-      // Optimal attention path: TikTok, Social Media, IRL Live Streaming, TV Series, Open World Games, Tabletop RPGs
       rawPoints = [
         getNodePos('short_form_video', 'biological'),
         getNodePos('social_media', 'biological'),
@@ -262,29 +350,40 @@ const EfficientFrontier: React.FC<EfficientFrontierProps> = ({ viewMode, modalit
     }
 
     const curve = new THREE.CatmullRomCurve3(rawPoints);
-    return curve.getPoints(50);
+    return curve.getPoints(60);
   }, [viewMode, modalities]);
 
-  const color = viewMode === 'economic' ? '#10b981' : '#06b6d4';
-  const labelText = viewMode === 'economic' ? 'Attention Yield Frontier' : 'Optimal Attention Path';
+  // Subtle animated dash offset
+  useFrame((state) => {
+    if (lineRef.current?.material) {
+      lineRef.current.material.dashOffset = -state.clock.getElapsedTime() * 0.8;
+    }
+  });
+
+  const color = viewMode === 'economic' ? '#10b981' : '#00f0ff';
+  const labelText = viewMode === 'economic' ? '⚡ Attention Yield Frontier' : '⚡ Optimal Perception Frontier';
 
   return (
     <group>
       <Line
+        ref={lineRef}
         points={points}
         color={color}
-        lineWidth={2.5}
+        lineWidth={3.0}
         dashed
-        dashScale={2}
-        gapSize={1}
+        dashScale={1.8}
+        gapSize={1.2}
+        transparent
+        opacity={0.85}
       />
       {points.length > 0 && (
-        <Billboard position={[points[points.length - 1].x, points[points.length - 1].y + 5, points[points.length - 1].z]}>
+        <Billboard position={[points[points.length - 1].x, points[points.length - 1].y + 6, points[points.length - 1].z]}>
           <Text
             color={color}
-            fontSize={2.0}
+            fontSize={2.4}
             anchorX="center"
             anchorY="middle"
+            fontWeight="bold"
           >
             {labelText}
           </Text>
@@ -300,63 +399,86 @@ export const Scene: React.FC<SceneProps> = ({
   selectedNodeId,
   onSelectNode,
   modalities,
+  cameraPreset = 'isometric',
 }) => {
+  const selectedNode = useMemo(
+    () => modalities.find(m => m.id === selectedNodeId) || null,
+    [selectedNodeId, modalities]
+  );
+
   const colorMap = useMemo(
-    () => Object.fromEntries(modalities.map((m) => [m.id, getColorForSensory(m.sensoryComposition.visual, m.sensoryComposition.auditory, m.sensoryComposition.physical)])),
+    () => Object.fromEntries(modalities.map((m) => [
+      m.id, 
+      getColorForSensory(m.sensoryComposition.visual, m.sensoryComposition.auditory, m.sensoryComposition.physical)
+    ])),
     [modalities]
   );
 
   const handleBackgroundClick = () => {
-    // Deselect if clicked on empty space
     onSelectNode(null);
   };
 
   return (
     <div style={{ width: '100%', height: '100%' }}>
       <Canvas
-        camera={{ position: [140, 90, 140], fov: 42 }}
-        gl={{ antialias: true, alpha: false }}
+        camera={{ position: [140, 95, 140], fov: 42 }}
+        gl={{ antialias: true, alpha: false, toneMapping: THREE.ACESFilmicToneMapping }}
         dpr={[1, 2]}
         onClick={handleBackgroundClick}
       >
-        <color attach="background" args={['#05070c']} />
+        <color attach="background" args={['#04060a']} />
 
-        <Stars radius={300} depth={60} count={1200} factor={2.5} saturation={0.15} fade speed={0.3} />
+        <Stars radius={350} depth={80} count={1800} factor={3.0} saturation={0.25} fade speed={0.4} />
 
-        {/* Lights */}
-        <ambientLight intensity={0.4} />
-        <pointLight position={[100, 120, 100]} intensity={1.8} color="#ffffff" />
-        <pointLight position={[-30, 80, -30]} intensity={1.0} color="#06b6d4" />
-        <pointLight position={[80, -20, 80]} intensity={0.6} color="#ff2a6d" />
+        {/* Cinematic Multi-Angle Lighting */}
+        <ambientLight intensity={0.45} />
+        <pointLight position={[100, 140, 100]} intensity={2.0} color="#ffffff" />
+        <pointLight position={[-40, 90, -40]} intensity={1.4} color="#00f0ff" />
+        <pointLight position={[90, -10, 90]} intensity={1.0} color="#ff0055" />
+        <pointLight position={[50, 100, 50]} intensity={0.8} color="#ffb700" />
         <Environment preset="city" />
 
-        <OrbitControls
-          enableDamping
-          dampingFactor={0.06}
-          minDistance={40}
-          maxDistance={350}
-          target={[50, 45, 50]}
-          rotateSpeed={0.5}
+        <CameraController
+          cameraPreset={cameraPreset}
+          selectedNode={selectedNode}
+          viewMode={viewMode}
         />
 
         <Axes viewMode={viewMode} />
         <AxisTicks viewMode={viewMode} />
-        <DropLines viewMode={viewMode} modalities={modalities} />
+        <CoordinateBoundingBox />
+        
+        {/* Drop lines */}
+        <group>
+          {modalities.map((m) => {
+            const pos: [number, number, number] = viewMode === 'economic'
+              ? [m.financialMetrics.capex, m.financialMetrics.attentionYield, m.financialMetrics.retentionMoat]
+              : [m.cognitiveLoad, m.systemicAgency, m.sensoryUtilization];
+            return (
+              <DropLine
+                key={m.id + '-drop'}
+                targetPos={pos}
+                isSelected={selectedNodeId === m.id}
+              />
+            );
+          })}
+        </group>
+
         <EfficientFrontier viewMode={viewMode} modalities={modalities} />
 
-        {/* 3D Grids */}
+        {/* 3D High-Tech Grids */}
         <group>
           {/* Floor (XZ) */}
           <Grid
             position={[50, 0, 50]}
             args={[100, 100]}
             cellSize={10}
-            cellThickness={0.4}
-            cellColor="#111827"
+            cellThickness={0.5}
+            cellColor="#0e1726"
             sectionSize={25}
-            sectionThickness={0.8}
-            sectionColor="#1f2937"
-            fadeDistance={250}
+            sectionThickness={1.0}
+            sectionColor="#1e293b"
+            fadeDistance={280}
           />
           {/* Back wall (XY) */}
           <Grid
@@ -365,11 +487,11 @@ export const Scene: React.FC<SceneProps> = ({
             args={[100, 100]}
             cellSize={10}
             cellThickness={0.4}
-            cellColor="#111827"
+            cellColor="#0e1726"
             sectionSize={25}
             sectionThickness={0.8}
-            sectionColor="#1f2937"
-            fadeDistance={250}
+            sectionColor="#1e293b"
+            fadeDistance={280}
           />
           {/* Side wall (YZ) */}
           <Grid
@@ -378,11 +500,11 @@ export const Scene: React.FC<SceneProps> = ({
             args={[100, 100]}
             cellSize={10}
             cellThickness={0.4}
-            cellColor="#111827"
+            cellColor="#0e1726"
             sectionSize={25}
             sectionThickness={0.8}
-            sectionColor="#1f2937"
-            fadeDistance={250}
+            sectionColor="#1e293b"
+            fadeDistance={280}
           />
         </group>
 

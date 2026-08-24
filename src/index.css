@@ -1,13 +1,13 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
 :root {
-  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
   color-scheme: dark;
-  color: rgba(255, 255, 255, 0.92);
-  background-color: #06070a;
+  color: rgba(255, 255, 255, 0.94);
+  background-color: #04060a;
   
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -28,98 +28,201 @@ body {
   min-width: 320px;
   min-height: 100vh;
   overflow: hidden;
-  background: #06070a;
+  background: #04060a;
+  user-select: none;
 }
 
 #root {
   width: 100vw;
   height: 100vh;
+  position: relative;
 }
 
-/* ─── Glass Panel ───────────────────────────────── */
+/* ─── Glassmorphic Cyber Panels ─────────────────────────── */
 .glass-panel {
-  background: rgba(12, 16, 24, 0.72);
-  backdrop-filter: blur(16px) saturate(1.4);
-  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  background: rgba(10, 15, 26, 0.76);
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
   box-shadow:
-    0 4px 30px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    0 8px 32px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* ─── Tooltip ───────────────────────────────────── */
+.glass-panel:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* ─── Top HUD Toolbar Buttons ───────────────────────────── */
+.hud-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.hud-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.hud-btn.active {
+  color: #00f0ff;
+  background: rgba(0, 240, 255, 0.12);
+  border-color: rgba(0, 240, 255, 0.35);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+}
+
+/* ─── Filter Chips ───────────────────────────────────────── */
+.filter-chip {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 4px 9px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  font-family: inherit;
+}
+
+.filter-chip:hover {
+  color: #f1f5f9;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.filter-chip.active {
+  color: #00f0ff;
+  background: rgba(0, 240, 255, 0.12);
+  border-color: rgba(0, 240, 255, 0.35);
+  font-weight: 700;
+}
+
+/* ─── Search Input ───────────────────────────────────────── */
+.search-input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 7px 28px 7px 10px;
+  color: #e2e8f0;
+  font-size: 12px;
+  outline: none;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.search-input:focus {
+  border-color: rgba(0, 240, 255, 0.4);
+  box-shadow: 0 0 0 2px rgba(0, 240, 255, 0.12);
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.search-input::placeholder {
+  color: #64748b;
+  font-size: 11px;
+}
+
+/* ─── Reset Button ───────────────────────────────────────── */
+.reset-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 600;
+  width: 100%;
+  padding: 7px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.reset-btn:hover {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* ─── Tooltip HUD ────────────────────────────────────────── */
 .modality-tooltip {
-  width: 260px;
-  padding: 18px 20px;
+  width: 280px;
+  padding: 16px 18px;
   pointer-events: none;
   z-index: 10;
-  border: 1px solid rgba(102, 252, 241, 0.15);
-}
-
-.modality-tooltip h3 {
-  margin: 0 0 12px 0;
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: #66fcf1;
-  text-shadow: 0 0 12px rgba(102, 252, 241, 0.35);
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 15px rgba(0, 240, 255, 0.15);
 }
 
 .stat-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 6px;
-  font-size: 13px;
-  color: #9ca3af;
+  margin-bottom: 5px;
+  font-size: 11px;
+  color: #94a3b8;
 }
 
 .stat-value {
-  font-weight: 600;
-  color: #e5e7eb;
+  font-weight: 700;
+  color: #f1f5f9;
+  font-family: 'JetBrains Mono', monospace;
   font-variant-numeric: tabular-nums;
 }
 
 .stat-divider {
   width: 100%;
   height: 1px;
-  background: linear-gradient(to right, transparent, rgba(102, 252, 241, 0.2), transparent);
-  margin: 10px 0;
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.1), transparent);
+  margin: 8px 0;
 }
 
 .stat-average {
-  font-weight: 500;
+  font-weight: 600;
+  color: #cbd5e1;
 }
 
 .stat-value.highlight {
-  color: #66fcf1;
-  font-size: 15px;
-  text-shadow: 0 0 8px rgba(102, 252, 241, 0.3);
+  font-size: 14px;
+  text-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
 }
 
-/* ─── Persistent Node Label ─────────────────────── */
+/* ─── Persistent Node Label ──────────────────────────────── */
 .modality-label {
   font-size: 11px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.65);
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
   pointer-events: none;
   white-space: nowrap;
-  transform: translateY(14px);
+  transform: translateY(16px);
   text-shadow:
-    0 0 6px rgba(0, 0, 0, 0.9),
-    0 1px 3px rgba(0, 0, 0, 0.7);
+    0 0 8px rgba(0, 0, 0, 0.95),
+    0 1px 4px rgba(0, 0, 0, 0.85);
   letter-spacing: 0.01em;
 }
 
-/* ─── Scrollbars & Interactive Watchlist ─────────── */
+/* ─── Scrollbars & Interactive Watchlist ──────────────────── */
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
+  height: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
@@ -127,34 +230,24 @@ body {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.14);
   border-radius: 2px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(0, 240, 255, 0.35);
 }
 
 .watchlist-row:hover {
-  background-color: rgba(255, 255, 255, 0.04) !important;
+  background-color: rgba(255, 255, 255, 0.06) !important;
   transform: translateX(2px);
 }
 
-.report-metric-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 11px;
-  color: #9ca3af;
-  margin-bottom: 5px;
+.watchlist-header-col:hover {
+  filter: brightness(1.4);
 }
 
-.report-metric-row strong {
-  color: #f3f4f6;
-  font-family: monospace;
-}
-
-/* ─── Analyst Input Custom Controls ───────────────── */
+/* ─── Analyst Input Custom Controls ───────────────────────── */
 .analyst-slider {
   -webkit-appearance: none;
   width: 100%;
@@ -164,11 +257,11 @@ body {
   outline: none;
   transition: background 0.15s ease;
   pointer-events: auto;
-  margin: 6px 0 10px 0;
+  margin: 4px 0 8px 0;
 }
 
 .analyst-slider:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.14);
 }
 
 .analyst-slider::-webkit-slider-thumb {
@@ -178,38 +271,38 @@ body {
   height: 12px;
   border-radius: 50%;
   cursor: pointer;
-  transition: transform 0.1s ease, background-color 0.1s ease;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
 }
 
 .analyst-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.3);
+  transform: scale(1.35);
 }
 
 /* Axis-specific thumb colors */
 .slider-capex::-webkit-slider-thumb {
   background-color: #f59e0b;
-  box-shadow: 0 0 6px rgba(245, 158, 11, 0.5);
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
 }
 .slider-yield::-webkit-slider-thumb {
   background-color: #10b981;
-  box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
 }
 .slider-moat::-webkit-slider-thumb {
   background-color: #06b6d4;
-  box-shadow: 0 0 6px rgba(6, 182, 212, 0.5);
+  box-shadow: 0 0 8px rgba(6, 182, 212, 0.6);
 }
 
 .slider-cog::-webkit-slider-thumb {
   background-color: #ff5555;
-  box-shadow: 0 0 6px rgba(255, 85, 85, 0.5);
+  box-shadow: 0 0 8px rgba(255, 85, 85, 0.6);
 }
 .slider-agency::-webkit-slider-thumb {
   background-color: #ff2a6d;
-  box-shadow: 0 0 6px rgba(255, 42, 109, 0.5);
+  box-shadow: 0 0 8px rgba(255, 42, 109, 0.6);
 }
 .slider-sensory::-webkit-slider-thumb {
   background-color: #5555ff;
-  box-shadow: 0 0 6px rgba(85, 85, 255, 0.5);
+  box-shadow: 0 0 8px rgba(85, 85, 255, 0.6);
 }
 
 /* Textareas & Dropdowns */
@@ -218,10 +311,10 @@ body {
   background-color: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
-  padding: 8px 12px;
-  color: #e5e7eb;
+  padding: 8px 10px;
+  color: #e2e8f0;
   font-family: inherit;
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.5;
   outline: none;
   resize: vertical;
@@ -230,32 +323,7 @@ body {
 }
 
 .analyst-textarea:focus {
-  border-color: rgba(69, 243, 255, 0.35);
-  box-shadow: 0 0 0 2px rgba(69, 243, 255, 0.15);
-  background-color: rgba(0, 0, 0, 0.45);
+  border-color: rgba(0, 240, 255, 0.4);
+  box-shadow: 0 0 0 2px rgba(0, 240, 255, 0.15);
+  background-color: rgba(0, 0, 0, 0.5);
 }
-
-.analyst-select {
-  background-color: #070a12;
-  color: #e5e7eb;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 4px 8px;
-  cursor: pointer;
-  outline: none;
-  font-family: inherit;
-  transition: border-color 0.2s;
-  pointer-events: auto;
-}
-
-.analyst-select:focus {
-  border-color: rgba(69, 243, 255, 0.35);
-}
-
-.watchlist-header-col:hover {
-  filter: brightness(1.35);
-}
-
-
