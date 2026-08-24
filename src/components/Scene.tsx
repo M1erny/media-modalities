@@ -29,7 +29,7 @@ const getColorForSensory = (visual: number, auditory: number, physical: number):
   return '#' + finalColor.getHexString();
 };
 
-/* ── Camera Controller Component ───────────────────────────── */
+/* ── Smooth, Fluid Camera Controller (Non-Blocking OrbitControls) ── */
 const CameraController: React.FC<{
   cameraPreset: CameraPreset;
   selectedNode: Modality | null;
@@ -38,9 +38,11 @@ const CameraController: React.FC<{
   const controlsRef = useRef<OrbitControlsType>(null);
   const targetCamPos = useRef(new THREE.Vector3(140, 95, 140));
   const targetLookAt = useRef(new THREE.Vector3(50, 45, 50));
+  const isTransitioning = useRef(false);
 
-  // Determine camera targets based on active preset
+  // Set camera target positions on preset change
   useEffect(() => {
+    isTransitioning.current = true;
     switch (cameraPreset) {
       case 'xy':
         targetCamPos.current.set(50, 50, 210);
@@ -66,37 +68,69 @@ const CameraController: React.FC<{
     }
   }, [cameraPreset]);
 
-  // Adjust focus when a node is selected
+  // Adjust focus target on node selection
   useEffect(() => {
     if (selectedNode) {
+      isTransitioning.current = true;
       const nodeX = viewMode === 'economic' ? selectedNode.financialMetrics.capex : selectedNode.cognitiveLoad;
       const nodeY = viewMode === 'economic' ? selectedNode.financialMetrics.attentionYield : selectedNode.systemicAgency;
       const nodeZ = viewMode === 'economic' ? selectedNode.financialMetrics.retentionMoat : selectedNode.sensoryUtilization;
       
       targetLookAt.current.set(nodeX, nodeY, nodeZ);
+
+      // Position camera at a nice offset from the node
+      targetCamPos.current.set(nodeX + 45, nodeY + 30, nodeZ + 45);
     }
   }, [selectedNode, viewMode]);
+
+  // Handle user manual interaction to immediately cancel auto-transition
+  useEffect(() => {
+    const controls = controlsRef.current;
+    if (!controls) return;
+
+    const onUserInteract = () => {
+      // User is zooming, rotating, or panning — stop auto-lerping
+      isTransitioning.current = false;
+    };
+
+    controls.addEventListener('start', onUserInteract);
+    return () => {
+      controls.removeEventListener('start', onUserInteract);
+    };
+  }, []);
 
   useFrame(({ camera }, delta) => {
     if (!controlsRef.current) return;
 
-    // Smoothly lerp camera position
-    camera.position.lerp(targetCamPos.current, delta * 3.5);
+    // ONLY lerp when an active programmatic transition is running
+    if (isTransitioning.current) {
+      const posDist = camera.position.distanceTo(targetCamPos.current);
+      const targetDist = controlsRef.current.target.distanceTo(targetLookAt.current);
 
-    // Smoothly lerp orbit controls target
-    controlsRef.current.target.lerp(targetLookAt.current, delta * 3.5);
+      if (posDist > 0.3 || targetDist > 0.3) {
+        camera.position.lerp(targetCamPos.current, delta * 4.5);
+        controlsRef.current.target.lerp(targetLookAt.current, delta * 4.5);
+      } else {
+        // Transition finished — release to full free user orbit control
+        isTransitioning.current = false;
+      }
+    }
+
     controlsRef.current.update();
   });
 
   return (
     <OrbitControls
       ref={controlsRef}
-      enableDamping
-      dampingFactor={0.06}
-      minDistance={30}
-      maxDistance={400}
+      enableDamping={true}
+      dampingFactor={0.08}
+      rotateSpeed={0.85}
+      zoomSpeed={1.3}
+      panSpeed={1.1}
+      screenSpacePanning={true}
+      minDistance={10}
+      maxDistance={700}
       target={[50, 45, 50]}
-      rotateSpeed={0.6}
     />
   );
 };
@@ -118,15 +152,15 @@ const AxisTicks: React.FC<{ viewMode: 'biological' | 'economic' }> = ({ viewMode
         <React.Fragment key={`tick-${v}`}>
           {/* X axis ticks */}
           <Billboard position={[v, -4, 0]}>
-            <Text color={colors.x} fontSize={2.4} font="" anchorX="center" anchorY="middle">{v}</Text>
+            <Text color={colors.x} fontSize={2.4} anchorX="center" anchorY="middle">{v}</Text>
           </Billboard>
           {/* Y axis ticks */}
           <Billboard position={[-4, v, 0]}>
-            <Text color={colors.y} fontSize={2.4} font="" anchorX="center" anchorY="middle">{v}</Text>
+            <Text color={colors.y} fontSize={2.4} anchorX="center" anchorY="middle">{v}</Text>
           </Billboard>
           {/* Z axis ticks */}
           <Billboard position={[-4, 0, v]}>
-            <Text color={colors.z} fontSize={2.4} font="" anchorX="center" anchorY="middle">{v}</Text>
+            <Text color={colors.z} fontSize={2.4} anchorX="center" anchorY="middle">{v}</Text>
           </Billboard>
         </React.Fragment>
       ))}
@@ -353,7 +387,6 @@ const EfficientFrontier: React.FC<EfficientFrontierProps> = ({ viewMode, modalit
     return curve.getPoints(60);
   }, [viewMode, modalities]);
 
-  // Subtle animated dash offset
   useFrame((state) => {
     if (lineRef.current?.material) {
       lineRef.current.material.dashOffset = -state.clock.getElapsedTime() * 0.8;
