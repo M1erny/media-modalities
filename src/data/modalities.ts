@@ -7,29 +7,29 @@ export type ModalityArchetype =
   | 'Ambient Stream';
 
 export interface FinancialMetrics {
-  capex: number;          // Supply-side Production Cost / Complexity barrier (0-100)
-  attentionYield: number; // Throughput Attention Conversion ROI & Capture Velocity (0-100)
-  retentionMoat: number;  // Defensibility Stickiness, Switching Costs & LTV (0-100)
+  capex: number;          // Supply-side Capital Intensity / Production Cost (0-100)
+  attentionYield: number; // Monetization & Capture Velocity per unit of time (0-100)
+  retentionMoat: number;  // Defensibility, Switching Costs & Customer LTV (0-100)
   tamRating: 'Micro' | 'Small' | 'Medium' | 'Large' | 'Massive';
-  globalTamBillions: number; // Estimated global market addressable revenue ($B USD)
+  globalTamBillions: number; // Global annual addressable market ($B USD)
   archetype: ModalityArchetype;
   thesis: string;
   risks: string;
 }
 
 export interface SensoryComposition {
-  visual: number;    // % visual engagement (0-100)
-  auditory: number;  // % auditory engagement (0-100)
-  physical: number;  // % physical/tactile/proprioceptive engagement (0-100)
+  visual: number;    // % visual photons (0-100)
+  auditory: number;  // % acoustic waves (0-100)
+  physical: number;  // % somatosensory / haptic / vestibular (0-100)
 }
 
 export interface Modality {
   id: string;
   name: string;
   ticker: string;
-  cognitiveLoad: number;      // x axis (biological): Working memory & CPU effort (0-100)
-  systemicAgency: number;     // y axis (biological): User motor output & feedback control (0-100)
-  sensoryUtilization: number;  // z axis (biological): Bandwidth of sensory channels engaged (0-100)
+  cognitiveLoad: number;      // x axis (biological): Cortical compute / working memory cost (0-100)
+  systemicAgency: number;     // y axis (biological): Closed-loop motor feedback control (0-100)
+  sensoryUtilization: number;  // z axis (biological): Perceptual channel bandwidth (0-100)
   sensoryComposition: SensoryComposition;
   financialMetrics: FinancialMetrics;
 }
@@ -40,25 +40,25 @@ export const modalitiesData: Modality[] = [
     name: "Short-form Video (TikTok/Reels)",
     ticker: "SFV",
     cognitiveLoad: 10,
-    systemicAgency: 20,
+    systemicAgency: 15,
     sensoryUtilization: 70,
     sensoryComposition: { visual: 55, auditory: 35, physical: 10 },
     financialMetrics: {
       capex: 5,
       attentionYield: 98,
-      retentionMoat: 95,
+      retentionMoat: 92,
       tamRating: "Massive",
-      globalTamBillions: 185,
+      globalTamBillions: 190,
       archetype: "Algorithmic Attention Sink",
-      thesis: "Zero-barrier continuous variable reward loop. Hyper-personalized algorithmic graph yields the highest monetization velocity and daily minutes per user in human history.",
-      risks: "Geopolitical regulatory bans, severe cognitive saturation, generational attention degradation."
+      thesis: "Zero cognitive decoding friction. Algorithmic variable reward loop captures immediate attention with near-zero supply-side production cost.",
+      risks: "Severe attention fragmentation, geopolitical platform bans, brand advertiser sensitivity."
     }
   },
   {
     id: "social_media",
     name: "Social Media Feeds (X/IG)",
     ticker: "SOC",
-    cognitiveLoad: 20,
+    cognitiveLoad: 25,
     systemicAgency: 45,
     sensoryUtilization: 60,
     sensoryComposition: { visual: 70, auditory: 20, physical: 10 },
@@ -69,27 +69,27 @@ export const modalitiesData: Modality[] = [
       tamRating: "Massive",
       globalTamBillions: 240,
       archetype: "Algorithmic Attention Sink",
-      thesis: "Near-zero COGS via user-generated content (UGC). Social graph lock-in and notification-driven micro-sessions establish dominant habitual mindshare.",
-      risks: "Platform fatigue, antitrust scrutiny, ad-targeting depreciation via privacy frameworks."
+      thesis: "Zero-cost UGC engine anchored by network effects. Social graph identity lock-in drives daily habitual check-ins across global populations.",
+      risks: "Platform fatigue, antitrust regulation, signal decay from algorithmic spam."
     }
   },
   {
     id: "irl_streaming",
     name: "IRL Live Streaming (Twitch/Kick)",
     ticker: "IRL",
-    cognitiveLoad: 25,
-    systemicAgency: 50,
+    cognitiveLoad: 20,
+    systemicAgency: 45,
     sensoryUtilization: 50,
     sensoryComposition: { visual: 50, auditory: 45, physical: 5 },
     financialMetrics: {
       capex: 10,
-      attentionYield: 88,
+      attentionYield: 85,
       retentionMoat: 88,
       tamRating: "Large",
       globalTamBillions: 42,
       archetype: "Algorithmic Attention Sink",
-      thesis: "Hyper-intense parasocial community dynamics. Delivers 4-8 hours of secondary-screen user retention with sub-linear creator production costs.",
-      risks: "Creator burnout, unpredictable creator conduct liability, programmatic monetization frictions."
+      thesis: "Hyper-intense parasocial community lock-in. Captures multi-hour secondary screen attention with sub-linear creator equipment overhead.",
+      risks: "Creator burnout, unscripted conduct liability, non-programmatic monetization frictions."
     }
   },
   {
@@ -97,18 +97,18 @@ export const modalitiesData: Modality[] = [
     name: "Gen AI Prompting & Co-Creation",
     ticker: "GAI",
     cognitiveLoad: 70,
-    systemicAgency: 90,
-    sensoryUtilization: 20,
+    systemicAgency: 95,
+    sensoryUtilization: 25,
     sensoryComposition: { visual: 75, auditory: 5, physical: 20 },
     financialMetrics: {
-      capex: 75,
+      capex: 80,
       attentionYield: 85,
-      retentionMoat: 92,
+      retentionMoat: 90,
       tamRating: "Massive",
       globalTamBillions: 130,
       archetype: "High-Agency Sandbox",
-      thesis: "High compute training capex offset by zero-marginal-cost inference and exponential agency. Transforming passive consumers into interactive directors.",
-      risks: "Inference compute cost pressures, rapid foundation model commoditization, IP litigation."
+      thesis: "Infinite creative feedback loop. User commands state transformation with instant visual/textual synthesis, achieving peak agency.",
+      risks: "Inference compute cost pressure, model commoditization, copyright litigation."
     }
   },
   {
@@ -122,12 +122,12 @@ export const modalitiesData: Modality[] = [
     financialMetrics: {
       capex: 90,
       attentionYield: 82,
-      retentionMoat: 88,
+      retentionMoat: 92,
       tamRating: "Large",
       globalTamBillions: 95,
       archetype: "High-Agency Sandbox",
-      thesis: "Virtual alternate reality sandbox. Multi-year monetization tailwinds via expansions, microtransactions, and player social networks justify steep upfront CapEx.",
-      risks: "Extreme development cycles (5-7 years), catastrophic live-ops launch risks."
+      thesis: "Persistent alternate reality sandbox. Massive upfront CapEx is amortized over multi-year expansions, microtransactions, and social guild lock-in.",
+      risks: "Extreme 5-7 year development cycles, catastrophic live-service churn risk at launch."
     }
   },
   {
@@ -145,8 +145,8 @@ export const modalitiesData: Modality[] = [
       tamRating: "Small",
       globalTamBillions: 8,
       archetype: "High-Agency Sandbox",
-      thesis: "Maximum systemic agency with peer-driven emergent narrative. Negligible production overhead paired with high-margin core rulebooks and virtual tabletop ecosystems.",
-      risks: "Licensing controversies, high onboarding friction, scheduling logistics."
+      thesis: "Unbounded human collective imagination. Zero rendering CapEx paired with profound peer social commitments and lifetime rulebook collector value.",
+      risks: "High onboarding friction, scheduling logistics, niche addressable market."
     }
   },
   {
@@ -160,50 +160,50 @@ export const modalitiesData: Modality[] = [
     financialMetrics: {
       capex: 45,
       attentionYield: 45,
-      retentionMoat: 95,
+      retentionMoat: 96,
       tamRating: "Small",
       globalTamBillions: 12,
       archetype: "Deep Focus Moat",
-      thesis: "Infinite emergent combinatorial replayability. Minimalist graphical requirements offset by astronomical customer lifetime value (LTV) and near-zero churn.",
-      risks: "Extremely steep onboarding learning curves, niche addressable TAM."
+      thesis: "Infinite combinatorial decision trees. High intellectual cognitive barrier produces extraordinary customer LTV and near-zero voluntary churn.",
+      risks: "Steep onboarding curve, small addressable user base."
     }
   },
   {
     id: "interactive_learning",
-    name: "Interactive E-Learning (Duolingo/Codecademy)",
+    name: "Interactive E-Learning (Duolingo)",
     ticker: "ELN",
     cognitiveLoad: 75,
     systemicAgency: 80,
     sensoryUtilization: 40,
     sensoryComposition: { visual: 65, auditory: 15, physical: 20 },
     financialMetrics: {
-      capex: 55,
+      capex: 50,
       attentionYield: 60,
       retentionMoat: 85,
       tamRating: "Large",
       globalTamBillions: 65,
       archetype: "Deep Focus Moat",
-      thesis: "Gamified streak psychology combined with aspirational self-improvement drives predictable high-margin SaaS subscription cash flows.",
-      risks: "Skill plateau churn, disintermediation by conversational LLM agents."
+      thesis: "Self-improvement psychology coupled with daily gamified streak retention drives resilient recurring SaaS cash flows.",
+      risks: "Skill plateau drop-off, AI conversational tutor disintermediation."
     }
   },
   {
     id: "interactive_fiction",
     name: "Interactive Fiction & Visual Novels",
     ticker: "INF",
-    cognitiveLoad: 75,
-    systemicAgency: 80,
-    sensoryUtilization: 15,
+    cognitiveLoad: 70,
+    systemicAgency: 75,
+    sensoryUtilization: 20,
     sensoryComposition: { visual: 80, auditory: 5, physical: 15 },
     financialMetrics: {
       capex: 15,
-      attentionYield: 70,
+      attentionYield: 65,
       retentionMoat: 65,
       tamRating: "Small",
       globalTamBillions: 6,
       archetype: "Deep Focus Moat",
-      thesis: "Hyper-efficient text-and-branching engine economics. Intense fandom monetization with zero 3D rendering pipeline overhead.",
-      risks: "Saturated self-publishing storefronts, narrow regional appeal."
+      thesis: "High agency narrative branching produced at a fraction of 3D gaming CapEx, monetizing intense niche literary fandom.",
+      risks: "Saturated storefront distribution, limited mainstream penetration."
     }
   },
   {
@@ -216,13 +216,13 @@ export const modalitiesData: Modality[] = [
     sensoryComposition: { visual: 0, auditory: 95, physical: 5 },
     financialMetrics: {
       capex: 15,
-      attentionYield: 80,
+      attentionYield: 75,
       retentionMoat: 70,
       tamRating: "Large",
       globalTamBillions: 38,
       archetype: "Ambient Stream",
-      thesis: "Uniquely captures secondary ambient attention during transit, fitness, and domestic chores. High intimacy host endorsements drive elite ad pricing.",
-      risks: "Supply hyper-saturation, platform fragmentation, programmatic measurement limits."
+      thesis: "Monopolizes secondary ambient attention during transit and chores. Direct auditory intimacy commands premium endorsement CPMs.",
+      risks: "Supply saturation, fragmented measurement, low programmatic automation."
     }
   },
   {
@@ -240,27 +240,27 @@ export const modalitiesData: Modality[] = [
       tamRating: "Large",
       globalTamBillions: 28,
       archetype: "Ambient Stream",
-      thesis: "Near-zero cognitive friction utility asset. Provides non-intrusive focus and sleep acoustic masking for hundreds of uninterrupted hours.",
-      risks: "Streaming royalty pool restructuring, AI-generated track commoditization."
+      thesis: "Pure utility audio masking focus and sleep for uninterrupted hours with zero cognitive friction.",
+      risks: "Streaming royalty pool devaluation, AI generative track dilution."
     }
   },
   {
     id: "audio_assistants",
     name: "Voice Assistants & Smart Audio",
     ticker: "IVA",
-    cognitiveLoad: 50,
+    cognitiveLoad: 45,
     systemicAgency: 70,
     sensoryUtilization: 20,
     sensoryComposition: { visual: 0, auditory: 85, physical: 15 },
     financialMetrics: {
       capex: 25,
-      attentionYield: 50,
+      attentionYield: 45,
       retentionMoat: 45,
       tamRating: "Medium",
       globalTamBillions: 18,
       archetype: "Ambient Stream",
-      thesis: "Hands-free ambient interface for domestic coordination, audio control, and micro-queries.",
-      risks: "Absence of screen real estate limits monetization surfaces, high skill abandonment."
+      thesis: "Hands-free voice conversational interface for home and vehicle coordination.",
+      risks: "Absence of screen monetization surfaces, high skill abandonment rate."
     }
   },
   {
@@ -278,8 +278,8 @@ export const modalitiesData: Modality[] = [
       tamRating: "Large",
       globalTamBillions: 80,
       archetype: "High-CapEx Spectacle",
-      thesis: "Cultural flagship IP generation. High upfront theatrical event prestige creates multi-decade franchise licensing moats.",
-      risks: "Ballooning production budgets ($250M+), collapsing post-theatrical window economics."
+      thesis: "Cultural flagship IP generation. Theatrical prestige establishes franchise IP value amortized over decades across merchandise and parks.",
+      risks: "High hit dependency ($250M+ budgets), shrinking post-theatrical distribution windows."
     }
   },
   {
@@ -293,12 +293,12 @@ export const modalitiesData: Modality[] = [
     financialMetrics: {
       capex: 80,
       attentionYield: 65,
-      retentionMoat: 68,
+      retentionMoat: 70,
       tamRating: "Large",
       globalTamBillions: 110,
       archetype: "High-CapEx Spectacle",
-      thesis: "Recurring multi-week watercooler narrative hooks anchor streaming subscriber cohorts against churn.",
-      risks: "Content library saturation, rising talent wage inflation, subscriber price sensitivity."
+      thesis: "Multi-week episodic narrative hooks anchor streaming subscriber cohorts against quarterly subscription churn.",
+      risks: "Content overproduction, talent wage inflation, consumer subscription fatigue."
     }
   },
   {
@@ -310,14 +310,14 @@ export const modalitiesData: Modality[] = [
     sensoryUtilization: 80,
     sensoryComposition: { visual: 50, auditory: 30, physical: 20 },
     financialMetrics: {
-      capex: 70,
+      capex: 75,
       attentionYield: 75,
       retentionMoat: 55,
       tamRating: "Medium",
       globalTamBillions: 48,
       archetype: "High-CapEx Spectacle",
-      thesis: "Pinnacle sensory audiovisual immersion and active narrative pacing commanding premium $70 retail pricing.",
-      risks: "Limited replayability once completed, ballooning development cost vs short sales windows."
+      thesis: "Peak audiovisual cinematic fidelity blended with active tactile pacing, commanding premium $70 retail price points.",
+      risks: "Zero replay value upon completion, short sales velocity windows."
     }
   },
   {
@@ -335,8 +335,8 @@ export const modalitiesData: Modality[] = [
       tamRating: "Micro",
       globalTamBillions: 14,
       archetype: "High-CapEx Spectacle",
-      thesis: "Irreplaceable real-time human performance exclusivity enabling exorbitant ticket pricing power.",
-      risks: "Physical seat capacity ceilings, high operating leverage, sensitivity to local tourism."
+      thesis: "Irreplaceable real-time human presence and physical acoustic staging commanding high premium ticket yields.",
+      risks: "Fixed seating capacity ceiling, high physical operating leverage."
     }
   },
   {
@@ -354,8 +354,8 @@ export const modalitiesData: Modality[] = [
       tamRating: "Small",
       globalTamBillions: 4,
       archetype: "High-CapEx Spectacle",
-      thesis: "Bridges intellectual stage drama with broadcast reach for elite cultural audience cohorts.",
-      risks: "Demographic aging of viewers, reliance on state public media funding."
+      thesis: "Bridges intellectual stage dialogue with broadcast reach for dedicated cultural audience cohorts.",
+      risks: "Demographic audience aging, reliance on state public media funding."
     }
   },
   {
@@ -373,8 +373,8 @@ export const modalitiesData: Modality[] = [
       tamRating: "Micro",
       globalTamBillions: 2,
       archetype: "Physical Reality Immersion",
-      thesis: "The absolute sensory benchmark. Real-world physical weather, tangible props, and visceral embodiment drive unmatched participant retention.",
-      risks: "Extreme logistical coordinate friction, non-scalable operational model."
+      thesis: "The empirical ceiling of sensory immersion. Unmediated physical gravity, tactile textures, weather, and embodied presence.",
+      risks: "Zero operational scalability, intense logistical coordination friction."
     }
   },
   {
@@ -388,12 +388,12 @@ export const modalitiesData: Modality[] = [
     financialMetrics: {
       capex: 98,
       attentionYield: 58,
-      retentionMoat: 78,
+      retentionMoat: 80,
       tamRating: "Medium",
       globalTamBillions: 75,
       archetype: "Physical Reality Immersion",
-      thesis: "Insurmountable capital barrier moat. Combines physical G-forces, moisture, dynamic motion, and IP worldbuilding to anchor global resort empires.",
-      risks: "Multi-decade capital payback horizons, macro tourism cyclicality, safety liabilities."
+      thesis: "Ultimate capital barrier moat. Physical G-forces, moisture, dynamic kinetics, and IP immersion anchor billion-dollar destination resorts.",
+      risks: "Multi-decade capital payback timelines, macroeconomic tourism sensitivity."
     }
   },
   {
@@ -411,13 +411,13 @@ export const modalitiesData: Modality[] = [
       tamRating: "Micro",
       globalTamBillions: 5,
       archetype: "Physical Reality Immersion",
-      thesis: "Tactile spatial problem-solving in physical space yielding strong local team-building cash flows.",
-      risks: "Zero replayability per player per room design, high commercial real estate overheads."
+      thesis: "Embodied collaborative physical puzzle-solving yielding profitable local corporate and consumer bookings.",
+      risks: "Zero customer replayability once room puzzle is resolved, high commercial real estate rents."
     }
   },
   {
     id: "vr_experiences",
-    name: "Virtual Reality (VR/Spatial)",
+    name: "Virtual Reality (Spatial VR)",
     ticker: "VRX",
     cognitiveLoad: 70,
     systemicAgency: 75,
@@ -425,13 +425,13 @@ export const modalitiesData: Modality[] = [
     sensoryComposition: { visual: 50, auditory: 35, physical: 15 },
     financialMetrics: {
       capex: 80,
-      attentionYield: 68,
+      attentionYield: 65,
       retentionMoat: 45,
       tamRating: "Small",
       globalTamBillions: 22,
       archetype: "Physical Reality Immersion",
-      thesis: "Highest digital presence medium. Encapsulated head-mounted display isolates peripheral distractions for complete attention capture.",
-      risks: "Hardware weight & friction, visual fatigue, fragmented spatial app ecosystems."
+      thesis: "Highest digital presence medium. Enclosed head-mounted display completely blocks peripheral real-world distractions.",
+      risks: "Headset ergonomics and weight friction, visual nausea, fragmented app ecosystem."
     }
   },
   {
@@ -449,8 +449,8 @@ export const modalitiesData: Modality[] = [
       tamRating: "Medium",
       globalTamBillions: 32,
       archetype: "Deep Focus Moat",
-      thesis: "Asymmetrical imagination engine where semantic tokens trigger high-resolution internal neural rendering with negligible distribution costs.",
-      risks: "Rising leisure time opportunity costs, decline in deep sustained literacy hours."
+      thesis: "Asymmetrical imagination engine. Minimalist abstract glyphs trigger internal high-resolution neural rendering with near-zero reproduction costs.",
+      risks: "High cognitive effort competing against frictionless digital video feeds."
     }
   },
   {
@@ -468,8 +468,8 @@ export const modalitiesData: Modality[] = [
       tamRating: "Small",
       globalTamBillions: 16,
       archetype: "Deep Focus Moat",
-      thesis: "Structured domain knowledge authority historically protected by academic curriculum adoption moats.",
-      risks: "Rapid disintermediation by interactive AI tutors and multimodal synthesis engines."
+      thesis: "High-density domain knowledge transmission historically protected by academic curriculum adoption moats.",
+      risks: "Disintermediation by multimodal AI synthesis and interactive tutors."
     }
   },
   {
@@ -487,8 +487,8 @@ export const modalitiesData: Modality[] = [
       tamRating: "Medium",
       globalTamBillions: 26,
       archetype: "Deep Focus Moat",
-      thesis: "Elite incubation engine for global multimedia IP franchises (Marvel, Shonen Jump) with durable fandom loyalty.",
-      risks: "Scanlation piracy, artist attrition, distribution channel consolidation."
+      thesis: "Efficient global IP incubation pipeline. Low consumption friction paired with deep character fandom creates high adaptation equity.",
+      risks: "Digital piracy, creative talent retention, distribution aggregation."
     }
   },
   {
@@ -506,8 +506,8 @@ export const modalitiesData: Modality[] = [
       tamRating: "Small",
       globalTamBillions: 9,
       archetype: "Deep Focus Moat",
-      thesis: "Financialized digital status signaling and online provenance anchoring niche collector attention.",
-      risks: "Speculative liquidity drawdowns, regulatory headwinds, low intrinsic utility."
+      thesis: "Financialized digital status signaling and cryptographic provenance anchoring niche community loyalty.",
+      risks: "Severe speculative liquidity volatility, low non-financial utility."
     }
   }
 ];

@@ -17,9 +17,9 @@ interface SceneProps {
 }
 
 const getColorForSensory = (visual: number, auditory: number, physical: number): string => {
-  const cVisual = new THREE.Color('#00f0ff');   // Cyan
-  const cAuditory = new THREE.Color('#ffb700'); // Amber
-  const cPhysical = new THREE.Color('#ff0055'); // Magenta
+  const cVisual = new THREE.Color('#00f0ff');   // Cyan (Photons)
+  const cAuditory = new THREE.Color('#ffb700'); // Amber (Acoustics)
+  const cPhysical = new THREE.Color('#ff0055'); // Magenta (Somatosensory/Physical)
 
   const r = (cVisual.r * visual + cAuditory.r * auditory + cPhysical.r * physical) / 100;
   const g = (cVisual.g * visual + cAuditory.g * auditory + cPhysical.g * physical) / 100;
@@ -29,7 +29,7 @@ const getColorForSensory = (visual: number, auditory: number, physical: number):
   return '#' + finalColor.getHexString();
 };
 
-/* ── Smooth, Fluid Camera Controller (Non-Blocking OrbitControls) ── */
+/* ── Smooth, Fluid Camera Controller (Non-Blocking) ────────── */
 const CameraController: React.FC<{
   cameraPreset: CameraPreset;
   selectedNode: Modality | null;
@@ -40,24 +40,23 @@ const CameraController: React.FC<{
   const targetLookAt = useRef(new THREE.Vector3(50, 45, 50));
   const isTransitioning = useRef(false);
 
-  // Set camera target positions on preset change
   useEffect(() => {
     isTransitioning.current = true;
     switch (cameraPreset) {
       case 'xy':
-        targetCamPos.current.set(50, 50, 210);
+        targetCamPos.current.set(50, 50, 200);
         targetLookAt.current.set(50, 50, 0);
         break;
       case 'zy':
-        targetCamPos.current.set(210, 50, 50);
+        targetCamPos.current.set(200, 50, 50);
         targetLookAt.current.set(0, 50, 50);
         break;
       case 'xz':
-        targetCamPos.current.set(50, 210, 50);
+        targetCamPos.current.set(50, 200, 50);
         targetLookAt.current.set(50, 0, 50);
         break;
       case 'frontier':
-        targetCamPos.current.set(110, 80, 160);
+        targetCamPos.current.set(115, 85, 155);
         targetLookAt.current.set(45, 55, 45);
         break;
       case 'isometric':
@@ -68,7 +67,6 @@ const CameraController: React.FC<{
     }
   }, [cameraPreset]);
 
-  // Adjust focus target on node selection
   useEffect(() => {
     if (selectedNode) {
       isTransitioning.current = true;
@@ -77,19 +75,15 @@ const CameraController: React.FC<{
       const nodeZ = viewMode === 'economic' ? selectedNode.financialMetrics.retentionMoat : selectedNode.sensoryUtilization;
       
       targetLookAt.current.set(nodeX, nodeY, nodeZ);
-
-      // Position camera at a nice offset from the node
-      targetCamPos.current.set(nodeX + 45, nodeY + 30, nodeZ + 45);
+      targetCamPos.current.set(nodeX + 40, nodeY + 28, nodeZ + 40);
     }
   }, [selectedNode, viewMode]);
 
-  // Handle user manual interaction to immediately cancel auto-transition
   useEffect(() => {
     const controls = controlsRef.current;
     if (!controls) return;
 
     const onUserInteract = () => {
-      // User is zooming, rotating, or panning — stop auto-lerping
       isTransitioning.current = false;
     };
 
@@ -102,16 +96,14 @@ const CameraController: React.FC<{
   useFrame(({ camera }, delta) => {
     if (!controlsRef.current) return;
 
-    // ONLY lerp when an active programmatic transition is running
     if (isTransitioning.current) {
       const posDist = camera.position.distanceTo(targetCamPos.current);
       const targetDist = controlsRef.current.target.distanceTo(targetLookAt.current);
 
-      if (posDist > 0.3 || targetDist > 0.3) {
+      if (posDist > 0.2 || targetDist > 0.2) {
         camera.position.lerp(targetCamPos.current, delta * 4.5);
         controlsRef.current.target.lerp(targetLookAt.current, delta * 4.5);
       } else {
-        // Transition finished — release to full free user orbit control
         isTransitioning.current = false;
       }
     }
@@ -135,159 +127,81 @@ const CameraController: React.FC<{
   );
 };
 
-/* ── Axis Ticks Component ────────────────────────────────────── */
-const AxisTicks: React.FC<{ viewMode: 'biological' | 'economic' }> = ({ viewMode }) => {
-  const ticks = [0, 25, 50, 75, 100];
-
-  const colors = useMemo(() => {
-    if (viewMode === 'economic') {
-      return { x: '#f59e0b', y: '#10b981', z: '#06b6d4' };
-    }
-    return { x: '#ff5555', y: '#ff2a6d', z: '#5555ff' };
-  }, [viewMode]);
-
-  return (
-    <group>
-      {ticks.map((v) => (
-        <React.Fragment key={`tick-${v}`}>
-          {/* X axis ticks */}
-          <Billboard position={[v, -4, 0]}>
-            <Text color={colors.x} fontSize={2.4} anchorX="center" anchorY="middle">{v}</Text>
-          </Billboard>
-          {/* Y axis ticks */}
-          <Billboard position={[-4, v, 0]}>
-            <Text color={colors.y} fontSize={2.4} anchorX="center" anchorY="middle">{v}</Text>
-          </Billboard>
-          {/* Z axis ticks */}
-          <Billboard position={[-4, 0, v]}>
-            <Text color={colors.z} fontSize={2.4} anchorX="center" anchorY="middle">{v}</Text>
-          </Billboard>
-        </React.Fragment>
-      ))}
-    </group>
-  );
-};
-
-/* ── 3D Coordinate Bounding Wireframe ────────────────────────── */
-const CoordinateBoundingBox: React.FC = () => {
-  const lines = useMemo(() => {
-    // 12 edges of the 100x100x100 bounding cube
-    const pts: [number, number, number][][] = [
-      [[0, 100, 0], [100, 100, 0]],
-      [[100, 100, 0], [100, 100, 100]],
-      [[100, 100, 100], [0, 100, 100]],
-      [[0, 100, 100], [0, 100, 0]],
-      
-      [[100, 0, 0], [100, 0, 100]],
-      [[100, 0, 100], [0, 0, 100]],
-      
-      [[100, 0, 0], [100, 100, 0]],
-      [[100, 0, 100], [100, 100, 100]],
-      [[0, 0, 100], [0, 100, 100]],
-    ];
-    return pts;
-  }, []);
-
-  return (
-    <group>
-      {lines.map((edge, idx) => (
-        <Line
-          key={`box-edge-${idx}`}
-          points={edge}
-          color="#1f293d"
-          lineWidth={1.0}
-          transparent
-          opacity={0.35}
-        />
-      ))}
-    </group>
-  );
-};
-
-/* ── 3D Axes with Directional Glow Cones ──────────────────────── */
-const Axes: React.FC<{ viewMode: 'biological' | 'economic' }> = ({ viewMode }) => {
+/* ── Clean Minimalist Axes ───────────────────────────────────── */
+const MinimalAxes: React.FC<{ viewMode: 'biological' | 'economic' }> = ({ viewMode }) => {
   const config = useMemo(() => {
     if (viewMode === 'economic') {
       return {
         xColor: '#f59e0b',
         yColor: '#10b981',
         zColor: '#06b6d4',
-        xLabel: 'Production Cost (CapEx)',
-        yLabel: 'Attention Yield (ROI)',
-        zLabel: 'Retention Moat (LTV)',
+        xLabel: 'Supply Barrier (CapEx)',
+        yLabel: 'Extraction Yield (Flow)',
+        zLabel: 'Retention Moat (Stock)',
       };
     }
     return {
       xColor: '#ff5555',
       yColor: '#ff2a6d',
       zColor: '#5555ff',
-      xLabel: 'Cognitive Load',
-      yLabel: 'Systemic Agency',
-      zLabel: 'Sensory Utilization',
+      xLabel: 'Cognitive Load (Compute)',
+      yLabel: 'Systemic Agency (Feedback)',
+      zLabel: 'Sensory Bandwidth (Input)',
     };
   }, [viewMode]);
 
   return (
     <group>
-      {/* ─── X Axis (horizontal) ─── */}
+      {/* X Axis */}
       <mesh position={[50, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <cylinderGeometry args={[0.2, 0.2, 100]} />
-        <meshBasicMaterial color={config.xColor} transparent opacity={0.8} />
+        <cylinderGeometry args={[0.18, 0.18, 100]} />
+        <meshBasicMaterial color={config.xColor} transparent opacity={0.7} />
       </mesh>
       <mesh position={[100, 0, 0]} rotation={[0, 0, -Math.PI / 2]}>
-        <coneGeometry args={[0.9, 3.0, 16]} />
+        <coneGeometry args={[0.8, 2.5, 16]} />
         <meshBasicMaterial color={config.xColor} />
       </mesh>
-      <Billboard position={[109, 0, 0]}>
-        <Text color={config.xColor} fontSize={2.8} anchorX="center" anchorY="middle" fontWeight="bold">High</Text>
+      <Billboard position={[108, 0, 0]}>
+        <Text color={config.xColor} fontSize={2.4} anchorX="center" anchorY="middle" fontWeight="bold">100</Text>
       </Billboard>
-      <Billboard position={[-8, 0, 0]}>
-        <Text color={config.xColor} fontSize={2.5} anchorX="center" anchorY="middle">Low</Text>
-      </Billboard>
-      <Billboard position={[50, -12, 0]}>
-        <Text color={config.xColor} fontSize={3.8} anchorX="center" anchorY="middle" fontWeight="bold">
+      <Billboard position={[50, -8, 0]}>
+        <Text color={config.xColor} fontSize={3.2} anchorX="center" anchorY="middle" fontWeight="bold">
           {config.xLabel}
         </Text>
       </Billboard>
 
-      {/* ─── Y Axis (vertical) ─── */}
+      {/* Y Axis */}
       <mesh position={[0, 50, 0]}>
-        <cylinderGeometry args={[0.2, 0.2, 100]} />
-        <meshBasicMaterial color={config.yColor} transparent opacity={0.8} />
+        <cylinderGeometry args={[0.18, 0.18, 100]} />
+        <meshBasicMaterial color={config.yColor} transparent opacity={0.7} />
       </mesh>
       <mesh position={[0, 100, 0]}>
-        <coneGeometry args={[0.9, 3.0, 16]} />
+        <coneGeometry args={[0.8, 2.5, 16]} />
         <meshBasicMaterial color={config.yColor} />
       </mesh>
-      <Billboard position={[0, 109, 0]}>
-        <Text color={config.yColor} fontSize={2.8} anchorX="center" anchorY="middle" fontWeight="bold">High</Text>
+      <Billboard position={[0, 108, 0]}>
+        <Text color={config.yColor} fontSize={2.4} anchorX="center" anchorY="middle" fontWeight="bold">100</Text>
       </Billboard>
-      <Billboard position={[0, -8, 0]}>
-        <Text color={config.yColor} fontSize={2.5} anchorX="center" anchorY="middle">Low</Text>
-      </Billboard>
-      <Billboard position={[-18, 50, 0]}>
-        <Text color={config.yColor} fontSize={3.8} anchorX="center" anchorY="middle" fontWeight="bold">
+      <Billboard position={[-14, 50, 0]}>
+        <Text color={config.yColor} fontSize={3.2} anchorX="center" anchorY="middle" fontWeight="bold">
           {config.yLabel}
         </Text>
       </Billboard>
 
-      {/* ─── Z Axis (depth) ─── */}
+      {/* Z Axis */}
       <mesh position={[0, 0, 50]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.2, 0.2, 100]} />
-        <meshBasicMaterial color={config.zColor} transparent opacity={0.8} />
+        <cylinderGeometry args={[0.18, 0.18, 100]} />
+        <meshBasicMaterial color={config.zColor} transparent opacity={0.7} />
       </mesh>
       <mesh position={[0, 0, 100]} rotation={[Math.PI / 2, 0, 0]}>
-        <coneGeometry args={[0.9, 3.0, 16]} />
+        <coneGeometry args={[0.8, 2.5, 16]} />
         <meshBasicMaterial color={config.zColor} />
       </mesh>
-      <Billboard position={[0, 0, 109]}>
-        <Text color={config.zColor} fontSize={2.8} anchorX="center" anchorY="middle" fontWeight="bold">High</Text>
+      <Billboard position={[0, 0, 108]}>
+        <Text color={config.zColor} fontSize={2.4} anchorX="center" anchorY="middle" fontWeight="bold">100</Text>
       </Billboard>
-      <Billboard position={[0, 0, -8]}>
-        <Text color={config.zColor} fontSize={2.5} anchorX="center" anchorY="middle">Low</Text>
-      </Billboard>
-      <Billboard position={[0, -12, 50]}>
-        <Text color={config.zColor} fontSize={3.8} anchorX="center" anchorY="middle" fontWeight="bold">
+      <Billboard position={[0, -8, 50]}>
+        <Text color={config.zColor} fontSize={3.2} anchorX="center" anchorY="middle" fontWeight="bold">
           {config.zLabel}
         </Text>
       </Billboard>
@@ -295,8 +209,8 @@ const Axes: React.FC<{ viewMode: 'biological' | 'economic' }> = ({ viewMode }) =
   );
 };
 
-/* ── Smoothly Animating Drop Line Component ─────────────────── */
-const DropLine: React.FC<{ targetPos: [number, number, number]; isSelected: boolean }> = ({ targetPos, isSelected }) => {
+/* ── Minimal Ambient Drop Line ───────────────────────────────── */
+const MinimalDropLine: React.FC<{ targetPos: [number, number, number]; isSelected: boolean }> = ({ targetPos, isSelected }) => {
   const lineRef = useRef<any>(null);
   const currentPos = useRef(new THREE.Vector3(targetPos[0], targetPos[1], targetPos[2]));
 
@@ -335,13 +249,13 @@ const DropLine: React.FC<{ targetPos: [number, number, number]; isSelected: bool
       <lineBasicMaterial
         color={isSelected ? '#00f0ff' : '#ffffff'}
         transparent
-        opacity={isSelected ? 0.35 : 0.08}
+        opacity={isSelected ? 0.4 : 0.04}
       />
     </line>
   );
 };
 
-/* ── Efficient Frontier Line with Animated Pulse ────────────── */
+/* ── Pareto Frontier Curve ───────────────────────────────────── */
 interface EfficientFrontierProps {
   viewMode: 'biological' | 'economic';
   modalities: Modality[];
@@ -384,17 +298,17 @@ const EfficientFrontier: React.FC<EfficientFrontierProps> = ({ viewMode, modalit
     }
 
     const curve = new THREE.CatmullRomCurve3(rawPoints);
-    return curve.getPoints(60);
+    return curve.getPoints(50);
   }, [viewMode, modalities]);
 
   useFrame((state) => {
     if (lineRef.current?.material) {
-      lineRef.current.material.dashOffset = -state.clock.getElapsedTime() * 0.8;
+      lineRef.current.material.dashOffset = -state.clock.getElapsedTime() * 0.7;
     }
   });
 
   const color = viewMode === 'economic' ? '#10b981' : '#00f0ff';
-  const labelText = viewMode === 'economic' ? '⚡ Attention Yield Frontier' : '⚡ Optimal Perception Frontier';
+  const labelText = viewMode === 'economic' ? 'Pareto Yield Frontier' : 'Optimal Perception Frontier';
 
   return (
     <group>
@@ -402,18 +316,18 @@ const EfficientFrontier: React.FC<EfficientFrontierProps> = ({ viewMode, modalit
         ref={lineRef}
         points={points}
         color={color}
-        lineWidth={3.0}
+        lineWidth={2.5}
         dashed
-        dashScale={1.8}
+        dashScale={1.6}
         gapSize={1.2}
         transparent
-        opacity={0.85}
+        opacity={0.8}
       />
       {points.length > 0 && (
-        <Billboard position={[points[points.length - 1].x, points[points.length - 1].y + 6, points[points.length - 1].z]}>
+        <Billboard position={[points[points.length - 1].x, points[points.length - 1].y + 5, points[points.length - 1].z]}>
           <Text
             color={color}
-            fontSize={2.4}
+            fontSize={2.2}
             anchorX="center"
             anchorY="middle"
             fontWeight="bold"
@@ -426,7 +340,7 @@ const EfficientFrontier: React.FC<EfficientFrontierProps> = ({ viewMode, modalit
   );
 };
 
-/* ── Main Scene ──────────────────────────────────────────── */
+/* ── Main Clean Scene ────────────────────────────────────────── */
 export const Scene: React.FC<SceneProps> = ({
   viewMode,
   selectedNodeId,
@@ -459,16 +373,15 @@ export const Scene: React.FC<SceneProps> = ({
         dpr={[1, 2]}
         onClick={handleBackgroundClick}
       >
-        <color attach="background" args={['#04060a']} />
+        <color attach="background" args={['#030508']} />
 
-        <Stars radius={350} depth={80} count={1800} factor={3.0} saturation={0.25} fade speed={0.4} />
+        <Stars radius={300} depth={60} count={1200} factor={2.5} saturation={0.2} fade speed={0.3} />
 
-        {/* Cinematic Multi-Angle Lighting */}
-        <ambientLight intensity={0.45} />
-        <pointLight position={[100, 140, 100]} intensity={2.0} color="#ffffff" />
-        <pointLight position={[-40, 90, -40]} intensity={1.4} color="#00f0ff" />
-        <pointLight position={[90, -10, 90]} intensity={1.0} color="#ff0055" />
-        <pointLight position={[50, 100, 50]} intensity={0.8} color="#ffb700" />
+        {/* Ambient & Directional Lighting */}
+        <ambientLight intensity={0.4} />
+        <pointLight position={[100, 140, 100]} intensity={1.8} color="#ffffff" />
+        <pointLight position={[-40, 90, -40]} intensity={1.2} color="#00f0ff" />
+        <pointLight position={[90, -10, 90]} intensity={0.8} color="#ff0055" />
         <Environment preset="city" />
 
         <CameraController
@@ -477,18 +390,16 @@ export const Scene: React.FC<SceneProps> = ({
           viewMode={viewMode}
         />
 
-        <Axes viewMode={viewMode} />
-        <AxisTicks viewMode={viewMode} />
-        <CoordinateBoundingBox />
-        
-        {/* Drop lines */}
+        <MinimalAxes viewMode={viewMode} />
+
+        {/* Minimal Drop Lines */}
         <group>
           {modalities.map((m) => {
             const pos: [number, number, number] = viewMode === 'economic'
               ? [m.financialMetrics.capex, m.financialMetrics.attentionYield, m.financialMetrics.retentionMoat]
               : [m.cognitiveLoad, m.systemicAgency, m.sensoryUtilization];
             return (
-              <DropLine
+              <MinimalDropLine
                 key={m.id + '-drop'}
                 targetPos={pos}
                 isSelected={selectedNodeId === m.id}
@@ -499,49 +410,20 @@ export const Scene: React.FC<SceneProps> = ({
 
         <EfficientFrontier viewMode={viewMode} modalities={modalities} />
 
-        {/* 3D High-Tech Grids */}
-        <group>
-          {/* Floor (XZ) */}
-          <Grid
-            position={[50, 0, 50]}
-            args={[100, 100]}
-            cellSize={10}
-            cellThickness={0.5}
-            cellColor="#0e1726"
-            sectionSize={25}
-            sectionThickness={1.0}
-            sectionColor="#1e293b"
-            fadeDistance={280}
-          />
-          {/* Back wall (XY) */}
-          <Grid
-            position={[50, 50, 0]}
-            rotation={[Math.PI / 2, 0, 0]}
-            args={[100, 100]}
-            cellSize={10}
-            cellThickness={0.4}
-            cellColor="#0e1726"
-            sectionSize={25}
-            sectionThickness={0.8}
-            sectionColor="#1e293b"
-            fadeDistance={280}
-          />
-          {/* Side wall (YZ) */}
-          <Grid
-            position={[0, 50, 50]}
-            rotation={[0, 0, Math.PI / 2]}
-            args={[100, 100]}
-            cellSize={10}
-            cellThickness={0.4}
-            cellColor="#0e1726"
-            sectionSize={25}
-            sectionThickness={0.8}
-            sectionColor="#1e293b"
-            fadeDistance={280}
-          />
-        </group>
+        {/* Single Clean Floor Grid (XZ only — no cluttering side/back walls) */}
+        <Grid
+          position={[50, 0, 50]}
+          args={[100, 100]}
+          cellSize={10}
+          cellThickness={0.4}
+          cellColor="#0b1320"
+          sectionSize={25}
+          sectionThickness={0.8}
+          sectionColor="#152338"
+          fadeDistance={260}
+        />
 
-        {/* Data nodes */}
+        {/* 3D Bubble Data Nodes */}
         <group>
           {modalities.map((modality) => (
             <ModalityNode
