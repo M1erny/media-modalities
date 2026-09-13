@@ -1,10 +1,13 @@
 import React, { useMemo, useState } from 'react';
-import type { Modality, ModalityArchetype } from '../data/modalities';
+import { FAMILY_CONFIG, getParetoFrontier } from '../data/modalities';
+import type { Modality, ModalityFamily } from '../data/modalities';
 import type { CameraPreset } from './Scene';
 
 interface UIOverlayProps {
   viewMode: 'biological' | 'economic';
   setViewMode: (mode: 'biological' | 'economic') => void;
+  colorMode: 'sensory' | 'family';
+  setColorMode: (mode: 'sensory' | 'family') => void;
   selectedNodeId: string | null;
   onSelectNode: (id: string | null) => void;
   modalities: Modality[];
@@ -19,21 +22,11 @@ interface UIOverlayProps {
   onToggleAutoOrbit: () => void;
 }
 
-const getArchetypeColor = (archetype: ModalityArchetype): string => {
-  switch (archetype) {
-    case 'Algorithmic Attention Sink': return '#00f0ff';
-    case 'High-Agency Sandbox': return '#ff0055';
-    case 'Deep Focus Moat': return '#a855f7';
-    case 'Physical Reality Immersion': return '#10b981';
-    case 'High-CapEx Spectacle': return '#f59e0b';
-    case 'Ambient Stream': return '#38bdf8';
-    default: return '#9ca3af';
-  }
-};
-
 export const UIOverlay: React.FC<UIOverlayProps> = ({
   viewMode,
   setViewMode,
+  colorMode,
+  setColorMode,
   selectedNodeId,
   onSelectNode,
   modalities,
@@ -47,14 +40,26 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
   onToggleAutoOrbit,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState<'ALL' | 'VISUAL' | 'AUDITORY' | 'PHYSICAL' | 'HIGH_AGENCY'>('ALL');
+  const [activeFamilyFilter, setActiveFamilyFilter] = useState<'ALL' | ModalityFamily>('ALL');
   const [isWatchlistOpen, setIsWatchlistOpen] = useState(false);
   const [isPrinciplesModalOpen, setIsPrinciplesModalOpen] = useState(false);
   const [showCalibrationSliders, setShowCalibrationSliders] = useState(false);
+  const [groupByFamily, setGroupByFamily] = useState(false);
 
   const selectedNode = useMemo(
     () => modalities.find(m => m.id === selectedNodeId) || null,
     [selectedNodeId, modalities]
+  );
+
+  // Compute Pareto frontier assets for badging
+  const frontierModalities = useMemo(
+    () => getParetoFrontier(modalities, viewMode),
+    [modalities, viewMode]
+  );
+
+  const frontierIds = useMemo(
+    () => new Set(frontierModalities.map(m => m.id)),
+    [frontierModalities]
   );
 
   const averageScore = useMemo(
@@ -86,18 +91,18 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
       const matchesSearch = !query || 
         item.name.toLowerCase().includes(query) || 
         item.ticker.toLowerCase().includes(query) ||
+        item.family.toLowerCase().includes(query) ||
         item.financialMetrics.archetype.toLowerCase().includes(query);
 
       if (!matchesSearch) return false;
 
-      if (activeFilter === 'VISUAL') return item.sensoryComposition.visual >= 50;
-      if (activeFilter === 'AUDITORY') return item.sensoryComposition.auditory >= 40;
-      if (activeFilter === 'PHYSICAL') return item.sensoryComposition.physical >= 30;
-      if (activeFilter === 'HIGH_AGENCY') return item.systemicAgency >= 60;
+      if (activeFamilyFilter !== 'ALL' && item.family !== activeFamilyFilter) {
+        return false;
+      }
 
       return true;
     });
-  }, [modalities, searchQuery, activeFilter]);
+  }, [modalities, searchQuery, activeFamilyFilter]);
 
   const sortedWatchList = useMemo(() => {
     const getSortValue = (item: Modality) => {
@@ -131,6 +136,24 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
         : (valB as number) - (valA as number);
     });
   }, [filteredWatchList, sortField, sortDirection, viewMode]);
+
+  // Grouped by MECE family
+  const groupedWatchList = useMemo(() => {
+    const groups: Record<ModalityFamily, Modality[]> = {
+      'Interactive Gaming': [],
+      'Audio & Acoustic': [],
+      'Linear Audiovisual': [],
+      'Physical & Spatial': [],
+      'Text & Symbolic': [],
+      'Generative & Co-Creation': [],
+    };
+
+    sortedWatchList.forEach(m => {
+      groups[m.family].push(m);
+    });
+
+    return groups;
+  }, [sortedWatchList]);
 
   const handleSliderChange = (key: string, val: number) => {
     if (!selectedNode) return;
@@ -207,17 +230,15 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
           zIndex: 1,
         }}
       >
-        {/* Sleek Substack Watermark Tag */}
         <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div className="glass-panel" style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#ef4444', boxShadow: '0 0 10px #ef4444', animation: 'pulse 1.5s infinite' }} />
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#ef4444', boxShadow: '0 0 10px #ef4444' }} />
             <span style={{ fontSize: '12px', fontWeight: 800, letterSpacing: '0.06em', color: '#ffffff', fontFamily: 'monospace' }}>
               ATTENTION SPACE // {viewMode === 'economic' ? 'CAPITAL ASSET MATRIX' : 'BIOLOGICAL NEURAL LOOP'}
             </span>
           </div>
         </div>
 
-        {/* Minimal Recording Controller Dock */}
         <div style={{ display: 'flex', justifyContent: 'center', pointerEvents: 'auto' }}>
           <div className="glass-panel" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 14px', boxShadow: '0 12px 40px rgba(0,0,0,0.8)' }}>
             <button
@@ -235,6 +256,13 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
               className="hud-btn"
             >
               {viewMode === 'biological' ? 'Switch to 💰 Capital' : 'Switch to 🧠 Biological'}
+            </button>
+
+            <button
+              onClick={() => setColorMode(colorMode === 'sensory' ? 'family' : 'sensory')}
+              className="hud-btn"
+            >
+              {colorMode === 'sensory' ? '🎨 Families' : '🌈 Sensory RGB'}
             </button>
 
             <button
@@ -303,7 +331,7 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
 
           <span style={{ color: 'rgba(255,255,255,0.1)', fontSize: '12px' }}>|</span>
 
-          {/* Clean Segmented Mode Selector */}
+          {/* Model Dimension Toggle */}
           <div style={{ display: 'flex', gap: '4px', backgroundColor: 'rgba(0, 0, 0, 0.4)', padding: '3px', borderRadius: '7px' }}>
             <button
               onClick={() => setViewMode('biological')}
@@ -338,6 +366,46 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
               }}
             >
               💰 Capital
+            </button>
+          </div>
+
+          <span style={{ color: 'rgba(255,255,255,0.1)', fontSize: '12px' }}>|</span>
+
+          {/* Color Mode Switcher */}
+          <div style={{ display: 'flex', gap: '4px', backgroundColor: 'rgba(0, 0, 0, 0.4)', padding: '3px', borderRadius: '7px' }}>
+            <button
+              onClick={() => setColorMode('sensory')}
+              style={{
+                padding: '4px 8px',
+                borderRadius: '5px',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '10px',
+                fontWeight: 700,
+                transition: 'all 0.2s ease',
+                backgroundColor: colorMode === 'sensory' ? '#1e293b' : 'transparent',
+                color: colorMode === 'sensory' ? '#00f0ff' : '#64748b',
+              }}
+              title="Color by Biological Sensory Channel blend (Cyan Photons, Amber Acoustics, Magenta Somatosensory)"
+            >
+              🌈 Sensory RGB
+            </button>
+            <button
+              onClick={() => setColorMode('family')}
+              style={{
+                padding: '4px 8px',
+                borderRadius: '5px',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '10px',
+                fontWeight: 700,
+                transition: 'all 0.2s ease',
+                backgroundColor: colorMode === 'family' ? '#1e293b' : 'transparent',
+                color: colorMode === 'family' ? '#a855f7' : '#64748b',
+              }}
+              title="Color by MECE Substrate Families (Gaming, Audio, Audiovisual, Physical, Text, AI)"
+            >
+              🏷️ Families
             </button>
           </div>
         </div>
@@ -383,7 +451,6 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
 
         {/* Right: Record Tour, Drawer & Principles Triggers */}
         <div style={{ display: 'flex', gap: '8px' }}>
-          {/* Substack Record Tour Button */}
           <button
             onClick={onToggleRecordMode}
             className="glass-panel"
@@ -463,22 +530,40 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
             {/* Inspector Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px', flexWrap: 'wrap' }}>
                   <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 800, fontFamily: 'monospace' }}>
                     ${selectedNode.ticker}
                   </span>
+                  
+                  {/* Family Tag */}
                   <span style={{
                     fontSize: '9px',
                     fontWeight: 700,
                     padding: '2px 6px',
                     borderRadius: '4px',
-                    backgroundColor: getArchetypeColor(selectedNode.financialMetrics.archetype) + '20',
-                    color: getArchetypeColor(selectedNode.financialMetrics.archetype),
-                    border: `1px solid ${getArchetypeColor(selectedNode.financialMetrics.archetype)}40`,
+                    backgroundColor: FAMILY_CONFIG[selectedNode.family].color + '20',
+                    color: FAMILY_CONFIG[selectedNode.family].color,
+                    border: `1px solid ${FAMILY_CONFIG[selectedNode.family].color}40`,
                   }}>
-                    {selectedNode.financialMetrics.archetype}
+                    {FAMILY_CONFIG[selectedNode.family].icon} {selectedNode.family}
                   </span>
+
+                  {/* Pareto Frontier Badge */}
+                  {frontierIds.has(selectedNode.id) && (
+                    <span style={{
+                      fontSize: '8px',
+                      padding: '2px 6px',
+                      borderRadius: '4px',
+                      backgroundColor: viewMode === 'economic' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(0, 240, 255, 0.2)',
+                      color: viewMode === 'economic' ? '#10b981' : '#00f0ff',
+                      fontWeight: 800,
+                      border: viewMode === 'economic' ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(0, 240, 255, 0.4)',
+                    }}>
+                      ⚡ PARETO FRONTIER
+                    </span>
+                  )}
                 </div>
+
                 <h2 style={{ fontSize: '17px', fontWeight: 800, color: '#ffffff', lineHeight: 1.2 }}>
                   {selectedNode.name}
                 </h2>
@@ -744,20 +829,33 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
           </div>
         )}
 
-        {/* Sensory Color Legend Pill */}
-        <div className="glass-panel" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '6px 14px', fontSize: '10px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#00f0ff' }} />
-            <span style={{ color: '#94a3b8' }}>Visual</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#ffb700' }} />
-            <span style={{ color: '#94a3b8' }}>Audio</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#ff0055' }} />
-            <span style={{ color: '#94a3b8' }}>Physical</span>
-          </div>
+        {/* Legend Pill based on active colorMode */}
+        <div className="glass-panel" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '6px 12px', fontSize: '10px' }}>
+          {colorMode === 'sensory' ? (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#00f0ff' }} />
+                <span style={{ color: '#94a3b8' }}>Visual</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#ffb700' }} />
+                <span style={{ color: '#94a3b8' }}>Audio</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#ff0055' }} />
+                <span style={{ color: '#94a3b8' }}>Physical</span>
+              </div>
+            </>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              {(Object.keys(FAMILY_CONFIG) as ModalityFamily[]).map((fam) => (
+                <div key={fam} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <div style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: FAMILY_CONFIG[fam].color }} />
+                  <span style={{ color: '#94a3b8' }}>{FAMILY_CONFIG[fam].icon} {fam.split(' ')[0]}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -769,7 +867,7 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
             position: 'absolute',
             top: '64px',
             right: '16px',
-            width: '390px',
+            width: '410px',
             height: 'calc(100% - 80px)',
             pointerEvents: 'auto',
             display: 'flex',
@@ -780,22 +878,39 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
           }}
         >
           {/* Drawer Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
             <h3 style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff', letterSpacing: '0.02em' }}>
               ATTENTION ASSETS ({sortedWatchList.length})
             </h3>
-            <button
-              onClick={() => setIsWatchlistOpen(false)}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#94a3b8',
-                cursor: 'pointer',
-                fontSize: '14px',
-              }}
-            >
-              ✕
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <button
+                onClick={() => setGroupByFamily(prev => !prev)}
+                style={{
+                  background: groupByFamily ? 'rgba(0, 240, 255, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                  border: groupByFamily ? '1px solid rgba(0, 240, 255, 0.35)' : '1px solid rgba(255, 255, 255, 0.08)',
+                  color: groupByFamily ? '#00f0ff' : '#94a3b8',
+                  padding: '3px 8px',
+                  borderRadius: '4px',
+                  fontSize: '9px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                {groupByFamily ? 'Ungroup' : 'Group by Family'}
+              </button>
+              <button
+                onClick={() => setIsWatchlistOpen(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#94a3b8',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                }}
+              >
+                ✕
+              </button>
+            </div>
           </div>
 
           {/* Search Input */}
@@ -804,28 +919,29 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Filter by name, ticker, or archetype..."
+              placeholder="Search format, ticker, or family..."
               className="search-input"
             />
           </div>
 
-          {/* Filter Chips */}
-          <div style={{ display: 'flex', gap: '4px', marginBottom: '10px', overflowX: 'auto' }} className="custom-scrollbar">
-            <button onClick={() => setActiveFilter('ALL')} className={`filter-chip ${activeFilter === 'ALL' ? 'active' : ''}`}>
-              All
+          {/* MECE Family Filter Chips */}
+          <div style={{ display: 'flex', gap: '4px', marginBottom: '10px', overflowX: 'auto', paddingBottom: '2px' }} className="custom-scrollbar">
+            <button onClick={() => setActiveFamilyFilter('ALL')} className={`filter-chip ${activeFamilyFilter === 'ALL' ? 'active' : ''}`}>
+              All (25)
             </button>
-            <button onClick={() => setActiveFilter('VISUAL')} className={`filter-chip ${activeFilter === 'VISUAL' ? 'active' : ''}`}>
-              👁️ Visual
-            </button>
-            <button onClick={() => setActiveFilter('AUDITORY')} className={`filter-chip ${activeFilter === 'AUDITORY' ? 'active' : ''}`}>
-              🎧 Audio
-            </button>
-            <button onClick={() => setActiveFilter('PHYSICAL')} className={`filter-chip ${activeFilter === 'PHYSICAL' ? 'active' : ''}`}>
-              🖐️ Physical
-            </button>
-            <button onClick={() => setActiveFilter('HIGH_AGENCY')} className={`filter-chip ${activeFilter === 'HIGH_AGENCY' ? 'active' : ''}`}>
-              🎮 High Agency
-            </button>
+            {(Object.keys(FAMILY_CONFIG) as ModalityFamily[]).map((fam) => (
+              <button
+                key={fam}
+                onClick={() => setActiveFamilyFilter(fam)}
+                className={`filter-chip ${activeFamilyFilter === fam ? 'active' : ''}`}
+                style={{
+                  borderColor: activeFamilyFilter === fam ? FAMILY_CONFIG[fam].color : undefined,
+                  color: activeFamilyFilter === fam ? FAMILY_CONFIG[fam].color : undefined,
+                }}
+              >
+                {FAMILY_CONFIG[fam].icon} {fam.replace(' & ', ' ')}
+              </button>
+            ))}
           </div>
 
           {/* Table Headers */}
@@ -839,52 +955,129 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
 
           {/* Scrollable Watchlist Table */}
           <div style={{ flexGrow: 1, overflowY: 'auto' }} className="custom-scrollbar">
-            {sortedWatchList.map((item) => {
-              const avg = Math.round(
-                viewMode === 'economic'
-                  ? (item.financialMetrics.capex + item.financialMetrics.attentionYield + item.financialMetrics.retentionMoat) / 3
-                  : (item.cognitiveLoad + item.systemicAgency + item.sensoryUtilization) / 3
-              );
-              const isItemSel = selectedNodeId === item.id;
-              const archetypeCol = getArchetypeColor(item.financialMetrics.archetype);
+            {groupByFamily ? (
+              /* Grouped by Family Layout */
+              (Object.keys(groupedWatchList) as ModalityFamily[]).map((fam) => {
+                const items = groupedWatchList[fam];
+                if (items.length === 0) return null;
+                const famCfg = FAMILY_CONFIG[fam];
 
-              return (
-                <div
-                  key={item.id}
-                  onClick={() => onSelectNode(item.id)}
-                  className="watchlist-row"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: '6px 4px',
-                    fontSize: '11px',
-                    cursor: 'pointer',
-                    borderRadius: '5px',
-                    backgroundColor: isItemSel ? 'rgba(0, 240, 255, 0.1)' : 'transparent',
-                    borderLeft: isItemSel ? '2px solid #00f0ff' : '2px solid transparent',
-                  }}
-                >
-                  <div style={{ flex: '1.6', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '4px' }}>
-                    <span style={{ fontSize: '9px', color: archetypeCol, fontFamily: 'monospace', fontWeight: 700, marginRight: '4px' }}>
-                      ${item.ticker}
-                    </span>
-                    <span style={{ color: isItemSel ? '#ffffff' : '#cbd5e1' }}>{item.name.replace(/ \(.*\)/, '')}</span>
+                return (
+                  <div key={fam} style={{ marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 2px', borderBottom: `1px solid ${famCfg.color}33`, marginBottom: '4px' }}>
+                      <span style={{ fontSize: '11px' }}>{famCfg.icon}</span>
+                      <span style={{ fontSize: '10px', fontWeight: 800, color: famCfg.color, letterSpacing: '0.04em' }}>
+                        {fam.toUpperCase()} ({items.length})
+                      </span>
+                    </div>
+
+                    {items.map((item) => {
+                      const avg = Math.round(
+                        viewMode === 'economic'
+                          ? (item.financialMetrics.capex + item.financialMetrics.attentionYield + item.financialMetrics.retentionMoat) / 3
+                          : (item.cognitiveLoad + item.systemicAgency + item.sensoryUtilization) / 3
+                      );
+                      const isItemSel = selectedNodeId === item.id;
+                      const isItemFrontier = frontierIds.has(item.id);
+
+                      return (
+                        <div
+                          key={item.id}
+                          onClick={() => onSelectNode(item.id)}
+                          className="watchlist-row"
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            padding: '5px 4px',
+                            fontSize: '11px',
+                            cursor: 'pointer',
+                            borderRadius: '5px',
+                            backgroundColor: isItemSel ? 'rgba(0, 240, 255, 0.1)' : 'transparent',
+                            borderLeft: isItemSel ? '2px solid #00f0ff' : '2px solid transparent',
+                          }}
+                        >
+                          <div style={{ flex: '1.6', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '4px' }}>
+                            <span style={{ fontSize: '9px', color: famCfg.color, fontFamily: 'monospace', fontWeight: 700, marginRight: '4px' }}>
+                              ${item.ticker}
+                            </span>
+                            <span style={{ color: isItemSel ? '#ffffff' : '#cbd5e1' }}>{item.name.replace(/ \(.*\)/, '')}</span>
+                            {isItemFrontier && (
+                              <span style={{ fontSize: '7px', color: '#00f0ff', fontWeight: 800, marginLeft: '4px' }}>⚡</span>
+                            )}
+                          </div>
+                          <div style={{ flex: '0.6', textAlign: 'right', fontFamily: 'monospace', color: viewMode === 'economic' ? '#f59e0b' : '#ff5555' }}>
+                            {viewMode === 'economic' ? item.financialMetrics.capex : item.cognitiveLoad}
+                          </div>
+                          <div style={{ flex: '0.6', textAlign: 'right', fontFamily: 'monospace', color: viewMode === 'economic' ? '#10b981' : '#ff2a6d' }}>
+                            {viewMode === 'economic' ? item.financialMetrics.attentionYield : item.systemicAgency}
+                          </div>
+                          <div style={{ flex: '0.6', textAlign: 'right', fontFamily: 'monospace', color: viewMode === 'economic' ? '#06b6d4' : '#5555ff' }}>
+                            {viewMode === 'economic' ? item.financialMetrics.retentionMoat : item.sensoryUtilization}
+                          </div>
+                          <div style={{ flex: '0.6', textAlign: 'right', fontFamily: 'monospace', color: '#c084fc', fontWeight: 700 }}>
+                            {avg}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                  <div style={{ flex: '0.6', textAlign: 'right', fontFamily: 'monospace', color: viewMode === 'economic' ? '#f59e0b' : '#ff5555' }}>
-                    {viewMode === 'economic' ? item.financialMetrics.capex : item.cognitiveLoad}
+                );
+              })
+            ) : (
+              /* Flat Sortable List */
+              sortedWatchList.map((item) => {
+                const avg = Math.round(
+                  viewMode === 'economic'
+                    ? (item.financialMetrics.capex + item.financialMetrics.attentionYield + item.financialMetrics.retentionMoat) / 3
+                    : (item.cognitiveLoad + item.systemicAgency + item.sensoryUtilization) / 3
+                );
+                const isItemSel = selectedNodeId === item.id;
+                const isItemFrontier = frontierIds.has(item.id);
+                const famCfg = FAMILY_CONFIG[item.family];
+
+                return (
+                  <div
+                    key={item.id}
+                    onClick={() => onSelectNode(item.id)}
+                    className="watchlist-row"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: '6px 4px',
+                      fontSize: '11px',
+                      cursor: 'pointer',
+                      borderRadius: '5px',
+                      backgroundColor: isItemSel ? 'rgba(0, 240, 255, 0.1)' : 'transparent',
+                      borderLeft: isItemSel ? '2px solid #00f0ff' : '2px solid transparent',
+                    }}
+                  >
+                    <div style={{ flex: '1.6', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '4px' }}>
+                      <span style={{ fontSize: '9px', color: famCfg.color, fontFamily: 'monospace', fontWeight: 700, marginRight: '4px' }}>
+                        ${item.ticker}
+                      </span>
+                      <span style={{ color: isItemSel ? '#ffffff' : '#cbd5e1' }}>{item.name.replace(/ \(.*\)/, '')}</span>
+                      {isItemFrontier && (
+                        <span style={{ fontSize: '7px', color: '#00f0ff', fontWeight: 800, marginLeft: '4px', backgroundColor: 'rgba(0, 240, 255, 0.15)', padding: '1px 3px', borderRadius: '2px' }}>
+                          ⚡FRONTIER
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ flex: '0.6', textAlign: 'right', fontFamily: 'monospace', color: viewMode === 'economic' ? '#f59e0b' : '#ff5555' }}>
+                      {viewMode === 'economic' ? item.financialMetrics.capex : item.cognitiveLoad}
+                    </div>
+                    <div style={{ flex: '0.6', textAlign: 'right', fontFamily: 'monospace', color: viewMode === 'economic' ? '#10b981' : '#ff2a6d' }}>
+                      {viewMode === 'economic' ? item.financialMetrics.attentionYield : item.systemicAgency}
+                    </div>
+                    <div style={{ flex: '0.6', textAlign: 'right', fontFamily: 'monospace', color: viewMode === 'economic' ? '#06b6d4' : '#5555ff' }}>
+                      {viewMode === 'economic' ? item.financialMetrics.retentionMoat : item.sensoryUtilization}
+                    </div>
+                    <div style={{ flex: '0.6', textAlign: 'right', fontFamily: 'monospace', color: '#c084fc', fontWeight: 700 }}>
+                      {avg}
+                    </div>
                   </div>
-                  <div style={{ flex: '0.6', textAlign: 'right', fontFamily: 'monospace', color: viewMode === 'economic' ? '#10b981' : '#ff2a6d' }}>
-                    {viewMode === 'economic' ? item.financialMetrics.attentionYield : item.systemicAgency}
-                  </div>
-                  <div style={{ flex: '0.6', textAlign: 'right', fontFamily: 'monospace', color: viewMode === 'economic' ? '#06b6d4' : '#5555ff' }}>
-                    {viewMode === 'economic' ? item.financialMetrics.retentionMoat : item.sensoryUtilization}
-                  </div>
-                  <div style={{ flex: '0.6', textAlign: 'right', fontFamily: 'monospace', color: '#c084fc', fontWeight: 700 }}>
-                    {avg}
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
       )}
@@ -911,7 +1104,7 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
           <div
             className="glass-panel"
             style={{
-              width: '620px',
+              width: '640px',
               maxHeight: '85vh',
               overflowY: 'auto',
               padding: '28px 32px',
@@ -937,61 +1130,48 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
               </button>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', fontSize: '13px', color: '#cbd5e1', lineHeight: 1.6 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', fontSize: '13px', color: '#cbd5e1', lineHeight: 1.6 }}>
               
-              {/* Biological Section */}
-              <div style={{ backgroundColor: 'rgba(56, 189, 248, 0.05)', border: '1px solid rgba(56, 189, 248, 0.15)', borderRadius: '10px', padding: '16px' }}>
-                <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#38bdf8', marginBottom: '8px' }}>
-                  1. Biological Neural Loop (Mutually Exclusive & Collectively Exhaustive)
+              {/* MECE Substrates Section */}
+              <div style={{ backgroundColor: 'rgba(168, 85, 247, 0.06)', border: '1px solid rgba(168, 85, 247, 0.2)', borderRadius: '10px', padding: '16px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#c084fc', marginBottom: '8px' }}>
+                  1. The 6 MECE Media Substrate Families
                 </h3>
                 <p style={{ marginBottom: '10px', fontSize: '12px', color: '#94a3b8' }}>
-                  Every biological organism interacting with media operates through a complete cybernetic loop:
+                  Every media modality is partitioned into an exact physical/computational substrate:
                 </p>
-                <ul style={{ paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px' }}>
-                  <li>
-                    <strong style={{ color: '#5555ff' }}>Sensory Bandwidth (Input - Z):</strong> Physical channel transducers engaged (photons on retina, sound waves in cochlea, mechanoreception, proprioception). Physical reality = 98 benchmark.
-                  </li>
-                  <li>
-                    <strong style={{ color: '#ff5555' }}>Cognitive Load (Compute - X):</strong> Metabolic cortical energy required to decode and mentally simulate abstract symbolic tokens (textbooks = 90, short video = 10).
-                  </li>
-                  <li>
-                    <strong style={{ color: '#ff2a6d' }}>Systemic Agency (Output - Y):</strong> Closed-loop causal control of the motor cortex over changing the system's state in real time (passive stream = 5, interactive games/AI = 85–95).
-                  </li>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '11px' }}>
+                  {(Object.keys(FAMILY_CONFIG) as ModalityFamily[]).map((fam) => (
+                    <div key={fam} style={{ padding: '6px 8px', borderRadius: '6px', backgroundColor: 'rgba(0,0,0,0.3)', border: `1px solid ${FAMILY_CONFIG[fam].color}33` }}>
+                      <strong style={{ color: FAMILY_CONFIG[fam].color }}>{FAMILY_CONFIG[fam].icon} {fam}</strong>
+                      <p style={{ color: '#94a3b8', fontSize: '10px', marginTop: '2px' }}>{FAMILY_CONFIG[fam].description}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Biological Section */}
+              <div style={{ backgroundColor: 'rgba(56, 189, 248, 0.05)', border: '1px solid rgba(56, 189, 248, 0.15)', borderRadius: '10px', padding: '16px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#38bdf8', marginBottom: '6px' }}>
+                  2. Biological Neural Loop (Perception $\to$ Compute $\to$ Action)
+                </h3>
+                <ul style={{ paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px' }}>
+                  <li><strong style={{ color: '#5555ff' }}>Sensory Bandwidth (Z):</strong> Physical transducer channels engaged (photons, acoustics, somatosensory).</li>
+                  <li><strong style={{ color: '#ff5555' }}>Cognitive Load (X):</strong> Cortical working memory required to decode abstract symbols.</li>
+                  <li><strong style={{ color: '#ff2a6d' }}>Systemic Agency (Y):</strong> Closed-loop causal control of the motor cortex over the system's state.</li>
                 </ul>
               </div>
 
               {/* Economic Section */}
               <div style={{ backgroundColor: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.15)', borderRadius: '10px', padding: '16px' }}>
-                <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#10b981', marginBottom: '8px' }}>
-                  2. Capital Attention Economics (Supply / Flow / Stock)
+                <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#10b981', marginBottom: '6px' }}>
+                  3. Capital Attention Economics (Supply $\to$ Flow $\to$ Stock)
                 </h3>
-                <p style={{ marginBottom: '10px', fontSize: '12px', color: '#94a3b8' }}>
-                  Media formats as financial assets competing for scarce human lifetime minutes:
-                </p>
-                <ul style={{ paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px' }}>
-                  <li>
-                    <strong style={{ color: '#f59e0b' }}>Supply Barrier (CapEx - X):</strong> Upfront capital & industrial complexity required to manufacture 1 hour of consumable media (UGC = 5, AAA games/Disney rides = 90–98).
-                  </li>
-                  <li>
-                    <strong style={{ color: '#10b981' }}>Extraction Yield (Flow - Y):</strong> Attention velocity and monetization conversion efficiency per minute of consumer exposure.
-                  </li>
-                  <li>
-                    <strong style={{ color: '#06b6d4' }}>Retention Moat (Stock - Z):</strong> Network effects, switching costs, identity lock-in, and customer lifetime value (LTV).
-                  </li>
+                <ul style={{ paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px' }}>
+                  <li><strong style={{ color: '#f59e0b' }}>Supply Barrier (CapEx - X):</strong> Upfront capital intensity required to manufacture 1 hour of consumable supply.</li>
+                  <li><strong style={{ color: '#10b981' }}>Extraction Yield (Flow - Y):</strong> Monetization velocity and attention capture rate per minute.</li>
+                  <li><strong style={{ color: '#06b6d4' }}>Retention Moat (Stock - Z):</strong> Network effects, switching costs, and customer lifetime value.</li>
                 </ul>
-              </div>
-
-              {/* Sensory RGB Mixing */}
-              <div>
-                <h3 style={{ fontSize: '13px', fontWeight: 700, color: '#ffffff', marginBottom: '6px' }}>
-                  3. Linear Additive Sensory Color Mapping
-                </h3>
-                <p style={{ fontSize: '12px', color: '#94a3b8' }}>
-                  Bubble colors are computed via exact linear RGB arithmetic blending of the three biological sensory channels:
-                  <strong style={{ color: '#00f0ff' }}> Cyan</strong> (Photons / Visual),
-                  <strong style={{ color: '#ffb700' }}> Amber</strong> (Acoustics / Auditory), and
-                  <strong style={{ color: '#ff0055' }}> Magenta</strong> (Somatosensory / Physical).
-                </p>
               </div>
 
             </div>

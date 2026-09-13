@@ -3,6 +3,7 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Environment, Grid, Text, Billboard, Stars, Sparkles, Line } from '@react-three/drei';
 import type { OrbitControls as OrbitControlsType } from 'three-stdlib';
 import * as THREE from 'three';
+import { FAMILY_CONFIG, getParetoFrontier } from '../data/modalities';
 import type { Modality } from '../data/modalities';
 import { ModalityNode } from './ModalityNode';
 
@@ -10,6 +11,7 @@ export type CameraPreset = 'isometric' | 'xy' | 'zy' | 'xz' | 'frontier';
 
 interface SceneProps {
   viewMode: 'biological' | 'economic';
+  colorMode?: 'sensory' | 'family';
   selectedNodeId: string | null;
   onSelectNode: (id: string | null) => void;
   modalities: Modality[];
@@ -263,61 +265,26 @@ const MinimalDropLine: React.FC<{ targetPos: [number, number, number]; isSelecte
 interface EfficientFrontierProps {
   viewMode: 'biological' | 'economic';
   modalities: Modality[];
+  frontierModalities: Modality[];
 }
 
-const EfficientFrontier: React.FC<EfficientFrontierProps> = ({ viewMode, modalities }) => {
+const EfficientFrontier: React.FC<EfficientFrontierProps> = ({ viewMode, frontierModalities }) => {
   const lineRef = useRef<any>(null);
 
   const points = useMemo(() => {
-    interface NodePoint {
-      id: string;
-      x: number;
-      y: number;
-      z: number;
-      efficiencyScore: number;
-    }
-
-    const data: NodePoint[] = modalities.map(m => {
+    const vectors = frontierModalities.map(m => {
       if (viewMode === 'economic') {
-        const x = m.financialMetrics.capex;
-        const y = m.financialMetrics.attentionYield;
-        const z = m.financialMetrics.retentionMoat;
-        const efficiencyScore = (y * 0.55 + z * 0.45);
-        return { id: m.id, x, y, z, efficiencyScore };
+        return new THREE.Vector3(m.financialMetrics.capex, m.financialMetrics.attentionYield, m.financialMetrics.retentionMoat);
       } else {
-        const x = m.cognitiveLoad;
-        const y = m.systemicAgency;
-        const z = m.sensoryUtilization;
-        const efficiencyScore = (y * 0.5 + z * 0.5);
-        return { id: m.id, x, y, z, efficiencyScore };
+        return new THREE.Vector3(m.cognitiveLoad, m.systemicAgency, m.sensoryUtilization);
       }
     });
 
-    // Pareto non-dominated filtering
-    const nonDominated = data.filter(p => {
-      const isDominated = data.some(q => 
-        q.id !== p.id &&
-        q.x <= p.x &&
-        q.y >= p.y &&
-        q.z >= p.z &&
-        (q.x < p.x || q.y > p.y || q.z > p.z)
-      );
-      return !isDominated;
-    });
-
-    let frontierNodes = nonDominated;
-    if (frontierNodes.length < 4) {
-      frontierNodes = [...data].sort((a, b) => b.efficiencyScore - a.efficiencyScore).slice(0, 6);
-    }
-
-    frontierNodes.sort((a, b) => a.x - b.x);
-
-    const vectors = frontierNodes.map(n => new THREE.Vector3(n.x, n.y, n.z));
     if (vectors.length < 2) return [];
 
     const curve = new THREE.CatmullRomCurve3(vectors);
-    return curve.getPoints(50);
-  }, [viewMode, modalities]);
+    return curve.getPoints(60);
+  }, [viewMode, frontierModalities]);
 
   useFrame((state) => {
     if (lineRef.current?.material) {
@@ -363,6 +330,7 @@ const EfficientFrontier: React.FC<EfficientFrontierProps> = ({ viewMode, modalit
 /* ── Main Clean Scene ────────────────────────────────────────── */
 export const Scene: React.FC<SceneProps> = ({
   viewMode,
+  colorMode = 'sensory',
   selectedNodeId,
   onSelectNode,
   modalities,
@@ -374,13 +342,29 @@ export const Scene: React.FC<SceneProps> = ({
     [selectedNodeId, modalities]
   );
 
-  const colorMap = useMemo(
-    () => Object.fromEntries(modalities.map((m) => [
-      m.id, 
-      getColorForSensory(m.sensoryComposition.visual, m.sensoryComposition.auditory, m.sensoryComposition.physical)
-    ])),
-    [modalities]
+  // Dynamic Pareto Frontier calculation
+  const frontierModalities = useMemo(
+    () => getParetoFrontier(modalities, viewMode),
+    [modalities, viewMode]
   );
+
+  const frontierIds = useMemo(
+    () => new Set(frontierModalities.map(m => m.id)),
+    [frontierModalities]
+  );
+
+  // Dynamic Color Mapping based on active colorMode
+  const colorMap = useMemo(() => {
+    return Object.fromEntries(modalities.map((m) => {
+      if (colorMode === 'family') {
+        return [m.id, FAMILY_CONFIG[m.family].color];
+      }
+      return [
+        m.id, 
+        getColorForSensory(m.sensoryComposition.visual, m.sensoryComposition.auditory, m.sensoryComposition.physical)
+      ];
+    }));
+  }, [modalities, colorMode]);
 
   const handleBackgroundClick = () => {
     onSelectNode(null);
@@ -394,7 +378,6 @@ export const Scene: React.FC<SceneProps> = ({
         dpr={[1, 2]}
         onClick={handleBackgroundClick}
       >
-        {/* Deep Studio Background */}
         <color attach="background" args={['#020408']} />
 
         {/* Ambient Cosmic Shimmer & Starfield */}
@@ -435,7 +418,11 @@ export const Scene: React.FC<SceneProps> = ({
           })}
         </group>
 
-        <EfficientFrontier viewMode={viewMode} modalities={modalities} />
+        <EfficientFrontier
+          viewMode={viewMode}
+          modalities={modalities}
+          frontierModalities={frontierModalities}
+        />
 
         {/* Luminous Floor Disc Reflection */}
         <mesh position={[50, -0.2, 50]} rotation={[-Math.PI / 2, 0, 0]}>
@@ -469,6 +456,7 @@ export const Scene: React.FC<SceneProps> = ({
               modality={modality}
               viewMode={viewMode}
               isSelected={selectedNodeId === modality.id}
+              isFrontier={frontierIds.has(modality.id)}
               onSelectNode={onSelectNode}
               color={colorMap[modality.id]}
             />

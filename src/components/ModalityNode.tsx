@@ -2,34 +2,25 @@ import { useRef, useState, useCallback, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
 import * as THREE from 'three';
+import { FAMILY_CONFIG } from '../data/modalities';
 import type { Modality } from '../data/modalities';
 
 interface ModalityNodeProps {
   modality: Modality;
   viewMode: 'biological' | 'economic';
   isSelected: boolean;
+  isFrontier?: boolean;
   onSelectNode: (id: string | null) => void;
   color: string;
 }
 
 const noRaycast = () => null;
 
-const getArchetypeColor = (archetype: string): string => {
-  switch (archetype) {
-    case 'Algorithmic Attention Sink': return '#00f0ff';
-    case 'High-Agency Sandbox': return '#ff0055';
-    case 'Deep Focus Moat': return '#a855f7';
-    case 'Physical Reality Immersion': return '#10b981';
-    case 'High-CapEx Spectacle': return '#f59e0b';
-    case 'Ambient Stream': return '#38bdf8';
-    default: return '#9ca3af';
-  }
-};
-
 export const ModalityNode: React.FC<ModalityNodeProps> = ({
   modality,
   viewMode,
   isSelected,
+  isFrontier = false,
   onSelectNode,
   color,
 }) => {
@@ -39,6 +30,7 @@ export const ModalityNode: React.FC<ModalityNodeProps> = ({
   const glowRef = useRef<THREE.Mesh>(null);
   const selectorRing1Ref = useRef<THREE.Mesh>(null);
   const selectorRing2Ref = useRef<THREE.Mesh>(null);
+  const frontierHaloRef = useRef<THREE.Mesh>(null);
   const groundShadowRef = useRef<THREE.Mesh>(null);
   
   const [hovered, setHovered] = useState(false);
@@ -114,6 +106,11 @@ export const ModalityNode: React.FC<ModalityNodeProps> = ({
       selectorRing2Ref.current.rotation.z += delta * 2.5;
     }
 
+    // Slow rotation for frontier aura
+    if (frontierHaloRef.current) {
+      frontierHaloRef.current.rotation.z += delta * 0.8;
+    }
+
     if (groundShadowRef.current && groupRef.current) {
       groundShadowRef.current.position.x = groupRef.current.position.x;
       groundShadowRef.current.position.z = groupRef.current.position.z;
@@ -137,7 +134,7 @@ export const ModalityNode: React.FC<ModalityNodeProps> = ({
     onSelectNode(modality.id);
   }, [modality.id, onSelectNode]);
 
-  const archetypeColor = getArchetypeColor(modality.financialMetrics.archetype);
+  const familyConfig = FAMILY_CONFIG[modality.family];
 
   return (
     <>
@@ -167,7 +164,7 @@ export const ModalityNode: React.FC<ModalityNodeProps> = ({
           <meshBasicMaterial visible={false} />
         </mesh>
 
-        {/* Dual Selector Rings */}
+        {/* Dual Selector Rings (When Selected) */}
         {isSelected && (
           <>
             <mesh ref={selectorRing1Ref} raycast={noRaycast}>
@@ -179,6 +176,18 @@ export const ModalityNode: React.FC<ModalityNodeProps> = ({
               <meshBasicMaterial color="#ffffff" transparent opacity={0.65} />
             </mesh>
           </>
+        )}
+
+        {/* Pulsing Frontier Aura Ring (For Non-Dominated Pareto Champions) */}
+        {isFrontier && !isSelected && (
+          <mesh ref={frontierHaloRef} raycast={noRaycast}>
+            <torusGeometry args={[nodeRadius * 1.5, 0.05, 8, 36]} />
+            <meshBasicMaterial
+              color={viewMode === 'economic' ? '#10b981' : '#00f0ff'}
+              transparent
+              opacity={0.5}
+            />
+          </mesh>
         )}
 
         {/* Atmospheric Glow Shell */}
@@ -235,21 +244,38 @@ export const ModalityNode: React.FC<ModalityNodeProps> = ({
           }}
         >
           <div className="glass-panel modality-tooltip">
+            {/* Header: Ticker + Family Badge + Frontier Tag */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-              <span style={{ fontSize: '10px', color: '#64748b', fontWeight: 800, fontFamily: 'monospace' }}>
-                ${modality.ticker}
-              </span>
-              <span style={{ 
-                fontSize: '9px', 
-                padding: '2px 7px', 
-                borderRadius: '4px', 
-                backgroundColor: archetypeColor + '20', 
-                color: archetypeColor, 
-                fontWeight: 700, 
-                border: `1px solid ${archetypeColor}40`,
-              }}>
-                {modality.financialMetrics.archetype}
-              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <span style={{ fontSize: '10px', color: '#64748b', fontWeight: 800, fontFamily: 'monospace' }}>
+                  ${modality.ticker}
+                </span>
+                <span style={{ 
+                  fontSize: '9px', 
+                  padding: '1px 6px', 
+                  borderRadius: '4px', 
+                  backgroundColor: familyConfig.color + '22', 
+                  color: familyConfig.color, 
+                  fontWeight: 700, 
+                  border: `1px solid ${familyConfig.color}40`,
+                }}>
+                  {familyConfig.icon} {modality.family}
+                </span>
+              </div>
+
+              {isFrontier && (
+                <span style={{
+                  fontSize: '8px',
+                  padding: '1px 5px',
+                  borderRadius: '3px',
+                  backgroundColor: viewMode === 'economic' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(0, 240, 255, 0.2)',
+                  color: viewMode === 'economic' ? '#10b981' : '#00f0ff',
+                  fontWeight: 800,
+                  border: viewMode === 'economic' ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(0, 240, 255, 0.4)',
+                }}>
+                  ⚡ FRONTIER
+                </span>
+              )}
             </div>
             
             <h3 style={{ fontSize: '13px', fontWeight: 700, color: '#ffffff', margin: '0 0 8px 0' }}>

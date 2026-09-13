@@ -6,6 +6,47 @@ export type ModalityArchetype =
   | 'High-CapEx Spectacle'
   | 'Ambient Stream';
 
+export type ModalityFamily = 
+  | 'Interactive Gaming'
+  | 'Audio & Acoustic'
+  | 'Linear Audiovisual'
+  | 'Physical & Spatial'
+  | 'Text & Symbolic'
+  | 'Generative & Co-Creation';
+
+export const FAMILY_CONFIG: Record<ModalityFamily, { color: string; icon: string; description: string }> = {
+  'Interactive Gaming': {
+    color: '#a855f7', // Vivid Violet
+    icon: '🎮',
+    description: 'Closed-loop virtual state simulations with real-time player cybernetic feedback.'
+  },
+  'Audio & Acoustic': {
+    color: '#f59e0b', // Warm Amber
+    icon: '🎧',
+    description: 'Cochlear sound wave transmission capturing ambient and dedicated auditory attention.'
+  },
+  'Linear Audiovisual': {
+    color: '#06b6d4', // Cyan
+    icon: '📺',
+    description: 'Synchronized stream of moving imagery and sound in a unidirectional broadcast.'
+  },
+  'Physical & Spatial': {
+    color: '#10b981', // Emerald Green
+    icon: '🖐️',
+    description: 'Embodied multi-sensory presence involving physical space, vestibular motion, and tactile matter.'
+  },
+  'Text & Symbolic': {
+    color: '#38bdf8', // Sky Blue
+    icon: '📚',
+    description: 'Abstract static symbolic glyphs decoded via left-hemisphere phonological compute.'
+  },
+  'Generative & Co-Creation': {
+    color: '#f43f5e', // Neon Rose
+    icon: '🤖',
+    description: 'Dynamic conversational and prompt-driven generative synthesis and emergent learning.'
+  }
+};
+
 export interface FinancialMetrics {
   capex: number;          // Supply-side Capital Intensity / Production Cost (0-100)
   attentionYield: number; // Monetization & Capture Velocity per unit of time (0-100)
@@ -27,6 +68,7 @@ export interface Modality {
   id: string;
   name: string;
   ticker: string;
+  family: ModalityFamily;
   cognitiveLoad: number;      // x axis (biological): Cortical compute / working memory cost (0-100)
   systemicAgency: number;     // y axis (biological): Closed-loop motor feedback control (0-100)
   sensoryUtilization: number;  // z axis (biological): Perceptual channel bandwidth (0-100)
@@ -35,86 +77,12 @@ export interface Modality {
 }
 
 export const modalitiesData: Modality[] = [
-  {
-    id: "short_form_video",
-    name: "Short-form Video (TikTok/Reels)",
-    ticker: "SFV",
-    cognitiveLoad: 10,
-    systemicAgency: 15,
-    sensoryUtilization: 70,
-    sensoryComposition: { visual: 55, auditory: 35, physical: 10 },
-    financialMetrics: {
-      capex: 5,
-      attentionYield: 98,
-      retentionMoat: 92,
-      tamRating: "Massive",
-      globalTamBillions: 190,
-      archetype: "Algorithmic Attention Sink",
-      thesis: "Zero cognitive decoding friction. Algorithmic variable reward loop captures immediate attention with near-zero supply-side production cost.",
-      risks: "Severe attention fragmentation, geopolitical platform bans, brand advertiser sensitivity."
-    }
-  },
-  {
-    id: "social_media",
-    name: "Social Media Feeds (X/IG)",
-    ticker: "SOC",
-    cognitiveLoad: 25,
-    systemicAgency: 45,
-    sensoryUtilization: 60,
-    sensoryComposition: { visual: 70, auditory: 20, physical: 10 },
-    financialMetrics: {
-      capex: 5,
-      attentionYield: 92,
-      retentionMoat: 94,
-      tamRating: "Massive",
-      globalTamBillions: 240,
-      archetype: "Algorithmic Attention Sink",
-      thesis: "Zero-cost UGC engine anchored by network effects. Social graph identity lock-in drives daily habitual check-ins across global populations.",
-      risks: "Platform fatigue, antitrust regulation, signal decay from algorithmic spam."
-    }
-  },
-  {
-    id: "irl_streaming",
-    name: "IRL Live Streaming (Twitch/Kick)",
-    ticker: "IRL",
-    cognitiveLoad: 20,
-    systemicAgency: 45,
-    sensoryUtilization: 50,
-    sensoryComposition: { visual: 50, auditory: 45, physical: 5 },
-    financialMetrics: {
-      capex: 10,
-      attentionYield: 85,
-      retentionMoat: 88,
-      tamRating: "Large",
-      globalTamBillions: 42,
-      archetype: "Algorithmic Attention Sink",
-      thesis: "Hyper-intense parasocial community lock-in. Captures multi-hour secondary screen attention with sub-linear creator equipment overhead.",
-      risks: "Creator burnout, unscripted conduct liability, non-programmatic monetization frictions."
-    }
-  },
-  {
-    id: "gen_ai",
-    name: "Gen AI Prompting & Co-Creation",
-    ticker: "GAI",
-    cognitiveLoad: 70,
-    systemicAgency: 95,
-    sensoryUtilization: 25,
-    sensoryComposition: { visual: 75, auditory: 5, physical: 20 },
-    financialMetrics: {
-      capex: 80,
-      attentionYield: 85,
-      retentionMoat: 90,
-      tamRating: "Massive",
-      globalTamBillions: 130,
-      archetype: "High-Agency Sandbox",
-      thesis: "Infinite creative feedback loop. User commands state transformation with instant visual/textual synthesis, achieving peak agency.",
-      risks: "Inference compute cost pressure, model commoditization, copyright litigation."
-    }
-  },
+  /* ── 1. INTERACTIVE GAMING (4) ── */
   {
     id: "video_games_open",
     name: "Video Games (Open World MMO)",
     ticker: "VGO",
+    family: "Interactive Gaming",
     cognitiveLoad: 65,
     systemicAgency: 85,
     sensoryUtilization: 85,
@@ -131,28 +99,10 @@ export const modalitiesData: Modality[] = [
     }
   },
   {
-    id: "tabletop_rpgs",
-    name: "Tabletop RPGs (D&D/Pathfinder)",
-    ticker: "TRP",
-    cognitiveLoad: 85,
-    systemicAgency: 100,
-    sensoryUtilization: 30,
-    sensoryComposition: { visual: 30, auditory: 60, physical: 10 },
-    financialMetrics: {
-      capex: 10,
-      attentionYield: 50,
-      retentionMoat: 90,
-      tamRating: "Small",
-      globalTamBillions: 8,
-      archetype: "High-Agency Sandbox",
-      thesis: "Unbounded human collective imagination. Zero rendering CapEx paired with profound peer social commitments and lifetime rulebook collector value.",
-      risks: "High onboarding friction, scheduling logistics, niche addressable market."
-    }
-  },
-  {
     id: "video_games_grand",
     name: "Video Games (Grand Strategy/Sim)",
     ticker: "STR",
+    family: "Interactive Gaming",
     cognitiveLoad: 95,
     systemicAgency: 95,
     sensoryUtilization: 30,
@@ -169,28 +119,30 @@ export const modalitiesData: Modality[] = [
     }
   },
   {
-    id: "interactive_learning",
-    name: "Interactive E-Learning (Duolingo)",
-    ticker: "ELN",
-    cognitiveLoad: 75,
-    systemicAgency: 80,
-    sensoryUtilization: 40,
-    sensoryComposition: { visual: 65, auditory: 15, physical: 20 },
+    id: "video_games_linear",
+    name: "Video Games (Cinematic Linear)",
+    ticker: "VGL",
+    family: "Interactive Gaming",
+    cognitiveLoad: 60,
+    systemicAgency: 65,
+    sensoryUtilization: 80,
+    sensoryComposition: { visual: 50, auditory: 30, physical: 20 },
     financialMetrics: {
-      capex: 50,
-      attentionYield: 60,
-      retentionMoat: 85,
-      tamRating: "Large",
-      globalTamBillions: 65,
-      archetype: "Deep Focus Moat",
-      thesis: "Self-improvement psychology coupled with daily gamified streak retention drives resilient recurring SaaS cash flows.",
-      risks: "Skill plateau drop-off, AI conversational tutor disintermediation."
+      capex: 75,
+      attentionYield: 75,
+      retentionMoat: 55,
+      tamRating: "Medium",
+      globalTamBillions: 48,
+      archetype: "High-CapEx Spectacle",
+      thesis: "Peak audiovisual cinematic fidelity blended with active tactile pacing, commanding premium $70 retail price points.",
+      risks: "Zero replay value upon completion, short sales velocity windows."
     }
   },
   {
     id: "interactive_fiction",
     name: "Interactive Fiction & Visual Novels",
     ticker: "INF",
+    family: "Interactive Gaming",
     cognitiveLoad: 70,
     systemicAgency: 75,
     sensoryUtilization: 20,
@@ -206,10 +158,13 @@ export const modalitiesData: Modality[] = [
       risks: "Saturated storefront distribution, limited mainstream penetration."
     }
   },
+
+  /* ── 2. AUDIO & ACOUSTIC (3) ── */
   {
     id: "podcasts",
     name: "Podcasts & Audiobooks",
     ticker: "AUD",
+    family: "Audio & Acoustic",
     cognitiveLoad: 30,
     systemicAgency: 5,
     sensoryUtilization: 20,
@@ -229,6 +184,7 @@ export const modalitiesData: Modality[] = [
     id: "ambient_music",
     name: "Ambient & Functional Audio",
     ticker: "AMB",
+    family: "Audio & Acoustic",
     cognitiveLoad: 5,
     systemicAgency: 0,
     sensoryUtilization: 15,
@@ -248,6 +204,7 @@ export const modalitiesData: Modality[] = [
     id: "audio_assistants",
     name: "Voice Assistants & Smart Audio",
     ticker: "IVA",
+    family: "Audio & Acoustic",
     cognitiveLoad: 45,
     systemicAgency: 70,
     sensoryUtilization: 20,
@@ -263,29 +220,73 @@ export const modalitiesData: Modality[] = [
       risks: "Absence of screen monetization surfaces, high skill abandonment rate."
     }
   },
+
+  /* ── 3. LINEAR AUDIOVISUAL (5) ── */
   {
-    id: "movies",
-    name: "Feature Films / Cinema",
-    ticker: "MVI",
-    cognitiveLoad: 40,
-    systemicAgency: 5,
-    sensoryUtilization: 75,
-    sensoryComposition: { visual: 60, auditory: 40, physical: 0 },
+    id: "short_form_video",
+    name: "Short-form Video (TikTok/Reels)",
+    ticker: "SFV",
+    family: "Linear Audiovisual",
+    cognitiveLoad: 10,
+    systemicAgency: 15,
+    sensoryUtilization: 70,
+    sensoryComposition: { visual: 55, auditory: 35, physical: 10 },
     financialMetrics: {
-      capex: 95,
-      attentionYield: 55,
-      retentionMoat: 35,
+      capex: 5,
+      attentionYield: 98,
+      retentionMoat: 92,
+      tamRating: "Massive",
+      globalTamBillions: 190,
+      archetype: "Algorithmic Attention Sink",
+      thesis: "Zero cognitive decoding friction. Algorithmic variable reward loop captures immediate attention with near-zero supply-side production cost.",
+      risks: "Severe attention fragmentation, geopolitical platform bans, brand advertiser sensitivity."
+    }
+  },
+  {
+    id: "social_media",
+    name: "Social Media Feeds (X/IG)",
+    ticker: "SOC",
+    family: "Linear Audiovisual",
+    cognitiveLoad: 25,
+    systemicAgency: 45,
+    sensoryUtilization: 60,
+    sensoryComposition: { visual: 70, auditory: 20, physical: 10 },
+    financialMetrics: {
+      capex: 5,
+      attentionYield: 92,
+      retentionMoat: 94,
+      tamRating: "Massive",
+      globalTamBillions: 240,
+      archetype: "Algorithmic Attention Sink",
+      thesis: "Zero-cost UGC engine anchored by network effects. Social graph identity lock-in drives daily habitual check-ins across global populations.",
+      risks: "Platform fatigue, antitrust regulation, signal decay from algorithmic spam."
+    }
+  },
+  {
+    id: "irl_streaming",
+    name: "IRL Live Streaming (Twitch/Kick)",
+    ticker: "IRL",
+    family: "Linear Audiovisual",
+    cognitiveLoad: 20,
+    systemicAgency: 45,
+    sensoryUtilization: 50,
+    sensoryComposition: { visual: 50, auditory: 45, physical: 5 },
+    financialMetrics: {
+      capex: 10,
+      attentionYield: 85,
+      retentionMoat: 88,
       tamRating: "Large",
-      globalTamBillions: 80,
-      archetype: "High-CapEx Spectacle",
-      thesis: "Cultural flagship IP generation. Theatrical prestige establishes franchise IP value amortized over decades across merchandise and parks.",
-      risks: "High hit dependency ($250M+ budgets), shrinking post-theatrical distribution windows."
+      globalTamBillions: 42,
+      archetype: "Algorithmic Attention Sink",
+      thesis: "Hyper-intense parasocial community lock-in. Captures multi-hour secondary screen attention with sub-linear creator equipment overhead.",
+      risks: "Creator burnout, unscripted conduct liability, non-programmatic monetization frictions."
     }
   },
   {
     id: "tv_series",
     name: "Prestige Episodic TV",
     ticker: "STG",
+    family: "Linear Audiovisual",
     cognitiveLoad: 45,
     systemicAgency: 5,
     sensoryUtilization: 70,
@@ -302,66 +303,32 @@ export const modalitiesData: Modality[] = [
     }
   },
   {
-    id: "video_games_linear",
-    name: "Video Games (Cinematic Linear)",
-    ticker: "VGL",
-    cognitiveLoad: 60,
-    systemicAgency: 65,
-    sensoryUtilization: 80,
-    sensoryComposition: { visual: 50, auditory: 30, physical: 20 },
-    financialMetrics: {
-      capex: 75,
-      attentionYield: 75,
-      retentionMoat: 55,
-      tamRating: "Medium",
-      globalTamBillions: 48,
-      archetype: "High-CapEx Spectacle",
-      thesis: "Peak audiovisual cinematic fidelity blended with active tactile pacing, commanding premium $70 retail price points.",
-      risks: "Zero replay value upon completion, short sales velocity windows."
-    }
-  },
-  {
-    id: "live_theater",
-    name: "Live Stage Theater & Broadway",
-    ticker: "THR",
-    cognitiveLoad: 55,
+    id: "movies",
+    name: "Feature Films / Cinema",
+    ticker: "MVI",
+    family: "Linear Audiovisual",
+    cognitiveLoad: 40,
     systemicAgency: 5,
-    sensoryUtilization: 60,
-    sensoryComposition: { visual: 50, auditory: 45, physical: 5 },
-    financialMetrics: {
-      capex: 65,
-      attentionYield: 40,
-      retentionMoat: 60,
-      tamRating: "Micro",
-      globalTamBillions: 14,
-      archetype: "High-CapEx Spectacle",
-      thesis: "Irreplaceable real-time human presence and physical acoustic staging commanding high premium ticket yields.",
-      risks: "Fixed seating capacity ceiling, high physical operating leverage."
-    }
-  },
-  {
-    id: "television_theater",
-    name: "Television Theater & Broadcast Stage",
-    ticker: "TTV",
-    cognitiveLoad: 65,
-    systemicAgency: 5,
-    sensoryUtilization: 45,
+    sensoryUtilization: 75,
     sensoryComposition: { visual: 60, auditory: 40, physical: 0 },
     financialMetrics: {
-      capex: 30,
-      attentionYield: 35,
-      retentionMoat: 55,
-      tamRating: "Small",
-      globalTamBillions: 4,
+      capex: 95,
+      attentionYield: 55,
+      retentionMoat: 35,
+      tamRating: "Large",
+      globalTamBillions: 80,
       archetype: "High-CapEx Spectacle",
-      thesis: "Bridges intellectual stage dialogue with broadcast reach for dedicated cultural audience cohorts.",
-      risks: "Demographic audience aging, reliance on state public media funding."
+      thesis: "Cultural flagship IP generation. Theatrical prestige establishes franchise IP value amortized over decades across merchandise and parks.",
+      risks: "High hit dependency ($250M+ budgets), shrinking post-theatrical distribution windows."
     }
   },
+
+  /* ── 4. PHYSICAL & SPATIAL REALITY (6) ── */
   {
     id: "larp",
     name: "Live Action Role Play (LARP)",
     ticker: "LRP",
+    family: "Physical & Spatial",
     cognitiveLoad: 75,
     systemicAgency: 90,
     sensoryUtilization: 98,
@@ -381,6 +348,7 @@ export const modalitiesData: Modality[] = [
     id: "theme_park_rides",
     name: "Theme Park Multi-Sensory Rides",
     ticker: "TPK",
+    family: "Physical & Spatial",
     cognitiveLoad: 15,
     systemicAgency: 5,
     sensoryUtilization: 95,
@@ -400,6 +368,7 @@ export const modalitiesData: Modality[] = [
     id: "escape_rooms",
     name: "Physical Escape Rooms",
     ticker: "ESC",
+    family: "Physical & Spatial",
     cognitiveLoad: 85,
     systemicAgency: 85,
     sensoryUtilization: 90,
@@ -416,9 +385,50 @@ export const modalitiesData: Modality[] = [
     }
   },
   {
+    id: "live_theater",
+    name: "Live Stage Theater & Broadway",
+    ticker: "THR",
+    family: "Physical & Spatial",
+    cognitiveLoad: 55,
+    systemicAgency: 5,
+    sensoryUtilization: 60,
+    sensoryComposition: { visual: 50, auditory: 45, physical: 5 },
+    financialMetrics: {
+      capex: 65,
+      attentionYield: 40,
+      retentionMoat: 60,
+      tamRating: "Micro",
+      globalTamBillions: 14,
+      archetype: "High-CapEx Spectacle",
+      thesis: "Irreplaceable real-time human presence and physical acoustic staging commanding high premium ticket yields.",
+      risks: "Fixed seating capacity ceiling, high physical operating leverage."
+    }
+  },
+  {
+    id: "television_theater",
+    name: "Television Theater & Broadcast Stage",
+    ticker: "TTV",
+    family: "Physical & Spatial",
+    cognitiveLoad: 65,
+    systemicAgency: 5,
+    sensoryUtilization: 45,
+    sensoryComposition: { visual: 60, auditory: 40, physical: 0 },
+    financialMetrics: {
+      capex: 30,
+      attentionYield: 35,
+      retentionMoat: 55,
+      tamRating: "Small",
+      globalTamBillions: 4,
+      archetype: "High-CapEx Spectacle",
+      thesis: "Bridges intellectual stage dialogue with broadcast reach for dedicated cultural audience cohorts.",
+      risks: "Demographic audience aging, reliance on state public media funding."
+    }
+  },
+  {
     id: "vr_experiences",
     name: "Virtual Reality (Spatial VR)",
     ticker: "VRX",
+    family: "Physical & Spatial",
     cognitiveLoad: 70,
     systemicAgency: 75,
     sensoryUtilization: 80,
@@ -434,10 +444,13 @@ export const modalitiesData: Modality[] = [
       risks: "Headset ergonomics and weight friction, visual nausea, fragmented app ecosystem."
     }
   },
+
+  /* ── 5. TEXT & SYMBOLIC (3) ── */
   {
     id: "books",
     name: "Books (Fiction Literature)",
     ticker: "FIC",
+    family: "Text & Symbolic",
     cognitiveLoad: 80,
     systemicAgency: 5,
     sensoryUtilization: 5,
@@ -457,6 +470,7 @@ export const modalitiesData: Modality[] = [
     id: "textbooks",
     name: "Textbooks / Non-Fiction",
     ticker: "NFX",
+    family: "Text & Symbolic",
     cognitiveLoad: 90,
     systemicAgency: 5,
     sensoryUtilization: 5,
@@ -476,6 +490,7 @@ export const modalitiesData: Modality[] = [
     id: "comic_books",
     name: "Comic Books & Manga",
     ticker: "MNG",
+    family: "Text & Symbolic",
     cognitiveLoad: 50,
     systemicAgency: 5,
     sensoryUtilization: 35,
@@ -491,10 +506,73 @@ export const modalitiesData: Modality[] = [
       risks: "Digital piracy, creative talent retention, distribution aggregation."
     }
   },
+
+  /* ── 6. GENERATIVE & CO-CREATION (4) ── */
+  {
+    id: "gen_ai",
+    name: "Gen AI Prompting & Co-Creation",
+    ticker: "GAI",
+    family: "Generative & Co-Creation",
+    cognitiveLoad: 70,
+    systemicAgency: 95,
+    sensoryUtilization: 25,
+    sensoryComposition: { visual: 75, auditory: 5, physical: 20 },
+    financialMetrics: {
+      capex: 80,
+      attentionYield: 85,
+      retentionMoat: 90,
+      tamRating: "Massive",
+      globalTamBillions: 130,
+      archetype: "High-Agency Sandbox",
+      thesis: "Infinite creative feedback loop. User commands state transformation with instant visual/textual synthesis, achieving peak agency.",
+      risks: "Inference compute cost pressure, model commoditization, copyright litigation."
+    }
+  },
+  {
+    id: "interactive_learning",
+    name: "Interactive E-Learning (Duolingo)",
+    ticker: "ELN",
+    family: "Generative & Co-Creation",
+    cognitiveLoad: 75,
+    systemicAgency: 80,
+    sensoryUtilization: 40,
+    sensoryComposition: { visual: 65, auditory: 15, physical: 20 },
+    financialMetrics: {
+      capex: 50,
+      attentionYield: 60,
+      retentionMoat: 85,
+      tamRating: "Large",
+      globalTamBillions: 65,
+      archetype: "Deep Focus Moat",
+      thesis: "Self-improvement psychology coupled with daily gamified streak retention drives resilient recurring SaaS cash flows.",
+      risks: "Skill plateau drop-off, AI conversational tutor disintermediation."
+    }
+  },
+  {
+    id: "tabletop_rpgs",
+    name: "Tabletop RPGs (D&D/Pathfinder)",
+    ticker: "TRP",
+    family: "Generative & Co-Creation",
+    cognitiveLoad: 85,
+    systemicAgency: 100,
+    sensoryUtilization: 30,
+    sensoryComposition: { visual: 30, auditory: 60, physical: 10 },
+    financialMetrics: {
+      capex: 10,
+      attentionYield: 50,
+      retentionMoat: 90,
+      tamRating: "Small",
+      globalTamBillions: 8,
+      archetype: "High-Agency Sandbox",
+      thesis: "Unbounded human collective imagination. Zero rendering CapEx paired with profound peer social commitments and lifetime rulebook collector value.",
+      risks: "High onboarding friction, scheduling logistics, niche addressable market."
+    }
+  },
   {
     id: "digital_art_nfts",
     name: "Digital Art & Web3 Collectibles",
     ticker: "NFT",
+    family: "Generative & Co-Creation",
     cognitiveLoad: 40,
     systemicAgency: 35,
     sensoryUtilization: 25,
@@ -511,3 +589,46 @@ export const modalitiesData: Modality[] = [
     }
   }
 ];
+
+/**
+ * Pure Mathematical Pareto Frontier Calculation
+ * Identifies the non-dominated assets where no other asset offers higher outputs for <= input cost.
+ */
+export function getParetoFrontier(modalities: Modality[], viewMode: 'biological' | 'economic'): Modality[] {
+  interface NodePoint {
+    modality: Modality;
+    x: number;
+    y: number;
+    z: number;
+    compositeScore: number;
+  }
+
+  const data: NodePoint[] = modalities.map(m => {
+    if (viewMode === 'economic') {
+      const x = m.financialMetrics.capex;
+      const y = m.financialMetrics.attentionYield;
+      const z = m.financialMetrics.retentionMoat;
+      return { modality: m, x, y, z, compositeScore: y * 0.55 + z * 0.45 };
+    } else {
+      const x = m.cognitiveLoad;
+      const y = m.systemicAgency;
+      const z = m.sensoryUtilization;
+      return { modality: m, x, y, z, compositeScore: y * 0.5 + z * 0.5 };
+    }
+  });
+
+  // An asset P is Pareto-dominated if there exists Q with Q.x <= P.x AND Q.y >= P.y AND Q.z >= P.z (with at least one strict inequality)
+  const nonDominated = data.filter(p => {
+    const isDominated = data.some(q => 
+      q.modality.id !== p.modality.id &&
+      q.x <= p.x &&
+      q.y >= p.y &&
+      q.z >= p.z &&
+      (q.x < p.x || q.y > p.y || q.z > p.z)
+    );
+    return !isDominated;
+  });
+
+  // Sort ascending by input cost X
+  return nonDominated.sort((a, b) => a.x - b.x).map(n => n.modality);
+}

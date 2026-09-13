@@ -7,6 +7,7 @@ import type { Modality } from './data/modalities';
 
 function App() {
   const [viewMode, setViewMode] = useState<'biological' | 'economic'>('biological');
+  const [colorMode, setColorMode] = useState<'sensory' | 'family'>('sensory');
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [modalities, setModalities] = useState<Modality[]>(modalitiesData);
   const [cameraPreset, setCameraPreset] = useState<CameraPreset>('isometric');
@@ -49,7 +50,7 @@ function App() {
       const next = !prev;
       setIsAutoOrbiting(next);
       if (next) {
-        setSelectedNodeId(null); // Clear selection for clean recording
+        setSelectedNodeId(null);
       }
       return next;
     });
@@ -61,6 +62,7 @@ function App() {
       <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
         <Scene
           viewMode={viewMode}
+          colorMode={colorMode}
           selectedNodeId={selectedNodeId}
           onSelectNode={setSelectedNodeId}
           modalities={modalities}
@@ -73,6 +75,8 @@ function App() {
       <UIOverlay
         viewMode={viewMode}
         setViewMode={setViewMode}
+        colorMode={colorMode}
+        setColorMode={setColorMode}
         selectedNodeId={selectedNodeId}
         onSelectNode={setSelectedNodeId}
         modalities={modalities}
