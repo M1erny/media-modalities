@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Environment, Grid, Text, Billboard, Stars, Sparkles, Line } from '@react-three/drei';
+import { OrbitControls, Environment, Grid, Text, Billboard, Stars, Sparkles } from '@react-three/drei';
 import type { OrbitControls as OrbitControlsType } from 'three-stdlib';
 import * as THREE from 'three';
 import { FAMILY_CONFIG, getParetoFrontier } from '../data/modalities';
@@ -284,72 +284,6 @@ const MinimalDropLine: React.FC<{ targetPos: [number, number, number]; isSelecte
   );
 };
 
-/* ── Dynamic Pareto Efficient Frontier Curve ────────────────── */
-interface EfficientFrontierProps {
-  viewMode: 'biological' | 'economic';
-  modalities: Modality[];
-  frontierModalities: Modality[];
-}
-
-const EfficientFrontier: React.FC<EfficientFrontierProps> = ({ viewMode, frontierModalities }) => {
-  const lineRef = useRef<any>(null);
-
-  const points = useMemo(() => {
-    const vectors = frontierModalities.map(m => {
-      if (viewMode === 'economic') {
-        return new THREE.Vector3(m.financialMetrics.capex, m.financialMetrics.attentionYield, m.financialMetrics.retentionMoat);
-      } else {
-        return new THREE.Vector3(m.cognitiveLoad, m.systemicAgency, m.sensoryUtilization);
-      }
-    });
-
-    if (vectors.length < 2) return [];
-
-    const curve = new THREE.CatmullRomCurve3(vectors);
-    return curve.getPoints(60);
-  }, [viewMode, frontierModalities]);
-
-  useFrame((state) => {
-    if (lineRef.current?.material) {
-      lineRef.current.material.dashOffset = -state.clock.getElapsedTime() * 0.7;
-    }
-  });
-
-  const color = viewMode === 'economic' ? '#10b981' : '#00f0ff';
-  const labelText = viewMode === 'economic' ? '⚡ Pareto Yield Frontier' : '⚡ Pareto Neural Frontier';
-
-  if (points.length === 0) return null;
-
-  return (
-    <group>
-      <Line
-        ref={lineRef}
-        points={points}
-        color={color}
-        lineWidth={2.5}
-        dashed
-        dashScale={1.6}
-        gapSize={1.2}
-        transparent
-        opacity={0.8}
-      />
-      {points.length > 0 && (
-        <Billboard position={[points[points.length - 1].x, points[points.length - 1].y + 5, points[points.length - 1].z]}>
-          <Text
-            color={color}
-            fontSize={2.2}
-            anchorX="center"
-            anchorY="middle"
-            fontWeight="bold"
-          >
-            {labelText}
-          </Text>
-        </Billboard>
-      )}
-    </group>
-  );
-};
-
 /* ── Main Clean Scene ────────────────────────────────────────── */
 export const Scene: React.FC<SceneProps> = ({
   viewMode,
@@ -440,12 +374,6 @@ export const Scene: React.FC<SceneProps> = ({
             );
           })}
         </group>
-
-        <EfficientFrontier
-          viewMode={viewMode}
-          modalities={modalities}
-          frontierModalities={frontierModalities}
-        />
 
         {/* Luminous Floor Disc Reflection */}
         <mesh position={[50, -0.2, 50]} rotation={[-Math.PI / 2, 0, 0]}>
