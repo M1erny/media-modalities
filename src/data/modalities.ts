@@ -80,7 +80,7 @@ export const modalitiesData: Modality[] = [
   /* ── 1. INTERACTIVE GAMING (4) ── */
   {
     id: "video_games_open",
-    name: "Video Games (Open World MMO)",
+    name: "Open-World MMOs",
     ticker: "VGO",
     family: "Interactive Gaming",
     cognitiveLoad: 65,
@@ -100,7 +100,7 @@ export const modalitiesData: Modality[] = [
   },
   {
     id: "video_games_grand",
-    name: "Video Games (Grand Strategy/Sim)",
+    name: "Grand Strategy Games",
     ticker: "STR",
     family: "Interactive Gaming",
     cognitiveLoad: 95,
@@ -120,7 +120,7 @@ export const modalitiesData: Modality[] = [
   },
   {
     id: "video_games_linear",
-    name: "Video Games (Cinematic Linear)",
+    name: "Cinematic Action Games",
     ticker: "VGL",
     family: "Interactive Gaming",
     cognitiveLoad: 60,
@@ -140,7 +140,7 @@ export const modalitiesData: Modality[] = [
   },
   {
     id: "interactive_fiction",
-    name: "Interactive Fiction & Visual Novels",
+    name: "Interactive Fiction",
     ticker: "INF",
     family: "Interactive Gaming",
     cognitiveLoad: 70,
@@ -162,7 +162,7 @@ export const modalitiesData: Modality[] = [
   /* ── 2. AUDIO & ACOUSTIC (3) ── */
   {
     id: "podcasts",
-    name: "Podcasts & Audiobooks",
+    name: "Podcasts",
     ticker: "AUD",
     family: "Audio & Acoustic",
     cognitiveLoad: 30,
@@ -182,7 +182,7 @@ export const modalitiesData: Modality[] = [
   },
   {
     id: "ambient_music",
-    name: "Ambient & Functional Audio",
+    name: "Ambient Audio",
     ticker: "AMB",
     family: "Audio & Acoustic",
     cognitiveLoad: 5,
@@ -202,7 +202,7 @@ export const modalitiesData: Modality[] = [
   },
   {
     id: "audio_assistants",
-    name: "Voice Assistants & Smart Audio",
+    name: "Voice Assistants",
     ticker: "IVA",
     family: "Audio & Acoustic",
     cognitiveLoad: 45,
@@ -224,7 +224,7 @@ export const modalitiesData: Modality[] = [
   /* ── 3. LINEAR AUDIOVISUAL (5) ── */
   {
     id: "short_form_video",
-    name: "Short-form Video (TikTok/Reels)",
+    name: "Short-Form Video",
     ticker: "SFV",
     family: "Linear Audiovisual",
     cognitiveLoad: 10,
@@ -244,7 +244,7 @@ export const modalitiesData: Modality[] = [
   },
   {
     id: "social_media",
-    name: "Social Media Feeds (X/IG)",
+    name: "Social Media Feeds",
     ticker: "SOC",
     family: "Linear Audiovisual",
     cognitiveLoad: 25,
@@ -264,7 +264,7 @@ export const modalitiesData: Modality[] = [
   },
   {
     id: "irl_streaming",
-    name: "IRL Live Streaming (Twitch/Kick)",
+    name: "Live Streaming",
     ticker: "IRL",
     family: "Linear Audiovisual",
     cognitiveLoad: 20,
@@ -284,7 +284,7 @@ export const modalitiesData: Modality[] = [
   },
   {
     id: "tv_series",
-    name: "Prestige Episodic TV",
+    name: "Prestige TV",
     ticker: "STG",
     family: "Linear Audiovisual",
     cognitiveLoad: 45,
@@ -304,7 +304,7 @@ export const modalitiesData: Modality[] = [
   },
   {
     id: "movies",
-    name: "Feature Films / Cinema",
+    name: "Feature Films",
     ticker: "MVI",
     family: "Linear Audiovisual",
     cognitiveLoad: 40,
@@ -326,7 +326,7 @@ export const modalitiesData: Modality[] = [
   /* ── 4. PHYSICAL & SPATIAL REALITY (6) ── */
   {
     id: "larp",
-    name: "Live Action Role Play (LARP)",
+    name: "Live Action Role Play",
     ticker: "LRP",
     family: "Physical & Spatial",
     cognitiveLoad: 75,
@@ -346,7 +346,7 @@ export const modalitiesData: Modality[] = [
   },
   {
     id: "theme_park_rides",
-    name: "Theme Park Multi-Sensory Rides",
+    name: "Theme Park Rides",
     ticker: "TPK",
     family: "Physical & Spatial",
     cognitiveLoad: 15,
@@ -366,7 +366,7 @@ export const modalitiesData: Modality[] = [
   },
   {
     id: "escape_rooms",
-    name: "Physical Escape Rooms",
+    name: "Escape Rooms",
     ticker: "ESC",
     family: "Physical & Spatial",
     cognitiveLoad: 85,
@@ -386,7 +386,7 @@ export const modalitiesData: Modality[] = [
   },
   {
     id: "live_theater",
-    name: "Live Stage Theater & Broadway",
+    name: "Live Theater",
     ticker: "THR",
     family: "Physical & Spatial",
     cognitiveLoad: 55,
@@ -406,7 +406,7 @@ export const modalitiesData: Modality[] = [
   },
   {
     id: "television_theater",
-    name: "Television Theater & Broadcast Stage",
+    name: "Broadcast Theater",
     ticker: "TTV",
     family: "Physical & Spatial",
     cognitiveLoad: 65,
@@ -426,7 +426,7 @@ export const modalitiesData: Modality[] = [
   },
   {
     id: "vr_experiences",
-    name: "Virtual Reality (Spatial VR)",
+    name: "Virtual Reality",
     ticker: "VRX",
     family: "Physical & Spatial",
     cognitiveLoad: 70,
@@ -448,7 +448,7 @@ export const modalitiesData: Modality[] = [
   /* ── 5. TEXT & SYMBOLIC (3) ── */
   {
     id: "books",
-    name: "Books (Fiction Literature)",
+    name: "Fiction Books",
     ticker: "FIC",
     family: "Text & Symbolic",
     cognitiveLoad: 80,
@@ -468,7 +468,7 @@ export const modalitiesData: Modality[] = [
   },
   {
     id: "textbooks",
-    name: "Textbooks / Non-Fiction",
+    name: "Non-Fiction Books",
     ticker: "NFX",
     family: "Text & Symbolic",
     cognitiveLoad: 90,
@@ -488,7 +488,7 @@ export const modalitiesData: Modality[] = [
   },
   {
     id: "comic_books",
-    name: "Comic Books & Manga",
+    name: "Comic Books",
     ticker: "MNG",
     family: "Text & Symbolic",
     cognitiveLoad: 50,
@@ -510,7 +510,7 @@ export const modalitiesData: Modality[] = [
   /* ── 6. GENERATIVE & CO-CREATION (4) ── */
   {
     id: "gen_ai",
-    name: "Gen AI Prompting & Co-Creation",
+    name: "Generative AI",
     ticker: "GAI",
     family: "Generative & Co-Creation",
     cognitiveLoad: 70,
@@ -530,7 +530,7 @@ export const modalitiesData: Modality[] = [
   },
   {
     id: "interactive_learning",
-    name: "Interactive E-Learning (Duolingo)",
+    name: "Interactive E-Learning",
     ticker: "ELN",
     family: "Generative & Co-Creation",
     cognitiveLoad: 75,
@@ -550,7 +550,7 @@ export const modalitiesData: Modality[] = [
   },
   {
     id: "tabletop_rpgs",
-    name: "Tabletop RPGs (D&D/Pathfinder)",
+    name: "Tabletop RPGs",
     ticker: "TRP",
     family: "Generative & Co-Creation",
     cognitiveLoad: 85,
@@ -570,7 +570,7 @@ export const modalitiesData: Modality[] = [
   },
   {
     id: "digital_art_nfts",
-    name: "Digital Art & Web3 Collectibles",
+    name: "Digital Collectibles",
     ticker: "NFT",
     family: "Generative & Co-Creation",
     cognitiveLoad: 40,

@@ -416,7 +416,7 @@ export const ModalityNode: React.FC<ModalityNodeProps> = ({
         >
           <div className="modality-label">
             <span style={{ fontSize: '9px', opacity: 0.6, marginRight: '3px', fontFamily: 'monospace' }}>${modality.ticker}</span>
-            {modality.name.replace(/ \(.*\)/, '')}
+            {modality.name}
           </div>
         </Html>
       </group>
