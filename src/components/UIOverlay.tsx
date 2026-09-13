@@ -13,6 +13,10 @@ interface UIOverlayProps {
   onResetAllModalities: () => void;
   cameraPreset: CameraPreset;
   setCameraPreset: (preset: CameraPreset) => void;
+  isRecordMode: boolean;
+  onToggleRecordMode: () => void;
+  isAutoOrbiting: boolean;
+  onToggleAutoOrbit: () => void;
 }
 
 const getArchetypeColor = (archetype: ModalityArchetype): string => {
@@ -37,6 +41,10 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
   onResetModality,
   cameraPreset,
   setCameraPreset,
+  isRecordMode,
+  onToggleRecordMode,
+  isAutoOrbiting,
+  onToggleAutoOrbit,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<'ALL' | 'VISUAL' | 'AUDITORY' | 'PHYSICAL' | 'HIGH_AGENCY'>('ALL');
@@ -181,6 +189,90 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
     );
   };
 
+  // ─── RECORDING MODE VIEW (MINIMAL CINEMATIC HUD) ───────────
+  if (isRecordMode) {
+    return (
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          pointerEvents: 'none',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          padding: '24px',
+          zIndex: 1,
+        }}
+      >
+        {/* Sleek Substack Watermark Tag */}
+        <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div className="glass-panel" style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#ef4444', boxShadow: '0 0 10px #ef4444', animation: 'pulse 1.5s infinite' }} />
+            <span style={{ fontSize: '12px', fontWeight: 800, letterSpacing: '0.06em', color: '#ffffff', fontFamily: 'monospace' }}>
+              ATTENTION SPACE // {viewMode === 'economic' ? 'CAPITAL ASSET MATRIX' : 'BIOLOGICAL NEURAL LOOP'}
+            </span>
+          </div>
+        </div>
+
+        {/* Minimal Recording Controller Dock */}
+        <div style={{ display: 'flex', justifyContent: 'center', pointerEvents: 'auto' }}>
+          <div className="glass-panel" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 14px', boxShadow: '0 12px 40px rgba(0,0,0,0.8)' }}>
+            <button
+              onClick={onToggleAutoOrbit}
+              className={`hud-btn ${isAutoOrbiting ? 'active' : ''}`}
+              style={{ fontWeight: 700 }}
+            >
+              {isAutoOrbiting ? '⏸ Pause Orbit' : '▶ Auto-Orbit'}
+            </button>
+
+            <span style={{ color: 'rgba(255,255,255,0.1)' }}>|</span>
+
+            <button
+              onClick={() => setViewMode(viewMode === 'biological' ? 'economic' : 'biological')}
+              className="hud-btn"
+            >
+              {viewMode === 'biological' ? 'Switch to 💰 Capital' : 'Switch to 🧠 Biological'}
+            </button>
+
+            <button
+              onClick={() => setCameraPreset('isometric')}
+              className={`hud-btn ${cameraPreset === 'isometric' ? 'active' : ''}`}
+            >
+              🌐 3D
+            </button>
+            <button
+              onClick={() => setCameraPreset('frontier')}
+              className={`hud-btn ${cameraPreset === 'frontier' ? 'active' : ''}`}
+            >
+              ⚡ Frontier
+            </button>
+            <button
+              onClick={() => setCameraPreset('xy')}
+              className={`hud-btn ${cameraPreset === 'xy' ? 'active' : ''}`}
+            >
+              📐 Front
+            </button>
+
+            <span style={{ color: 'rgba(255,255,255,0.1)' }}>|</span>
+
+            <button
+              onClick={onToggleRecordMode}
+              className="hud-btn"
+              style={{ color: '#f87171' }}
+              title="Exit Recording Mode (Esc)"
+            >
+              ✕ Exit Record
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── STANDARD INTERACTIVE VIEW ─────────────────────────────
   return (
     <div
       style={{
@@ -289,8 +381,31 @@ export const UIOverlay: React.FC<UIOverlayProps> = ({
           </button>
         </div>
 
-        {/* Right: Drawer & Principles Triggers */}
+        {/* Right: Record Tour, Drawer & Principles Triggers */}
         <div style={{ display: 'flex', gap: '8px' }}>
+          {/* Substack Record Tour Button */}
+          <button
+            onClick={onToggleRecordMode}
+            className="glass-panel"
+            style={{
+              padding: '7px 13px',
+              fontSize: '11px',
+              fontWeight: 700,
+              color: '#ffffff',
+              background: 'rgba(239, 68, 68, 0.15)',
+              border: '1px solid rgba(239, 68, 68, 0.4)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              transition: 'all 0.15s',
+            }}
+            title="Clean cinematic auto-orbit for recording Substack GIF/video"
+          >
+            <div style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: '#ef4444', boxShadow: '0 0 6px #ef4444' }} />
+            <span>🎬 Record Tour</span>
+          </button>
+
           <button
             onClick={() => setIsPrinciplesModalOpen(true)}
             className="glass-panel"

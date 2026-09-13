@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Environment, Grid, Text, Billboard, Stars, Line } from '@react-three/drei';
+import { OrbitControls, Environment, Grid, Text, Billboard, Stars, Sparkles, Line } from '@react-three/drei';
 import type { OrbitControls as OrbitControlsType } from 'three-stdlib';
 import * as THREE from 'three';
 import type { Modality } from '../data/modalities';
@@ -14,6 +14,7 @@ interface SceneProps {
   onSelectNode: (id: string | null) => void;
   modalities: Modality[];
   cameraPreset?: CameraPreset;
+  isAutoOrbiting?: boolean;
 }
 
 const getColorForSensory = (visual: number, auditory: number, physical: number): string => {
@@ -29,12 +30,13 @@ const getColorForSensory = (visual: number, auditory: number, physical: number):
   return '#' + finalColor.getHexString();
 };
 
-/* ── Smooth, Fluid Camera Controller (Non-Blocking) ────────── */
+/* ── Smooth, Fluid Camera Controller with Auto-Orbit ───────── */
 const CameraController: React.FC<{
   cameraPreset: CameraPreset;
   selectedNode: Modality | null;
   viewMode: 'biological' | 'economic';
-}> = ({ cameraPreset, selectedNode, viewMode }) => {
+  isAutoOrbiting: boolean;
+}> = ({ cameraPreset, selectedNode, viewMode, isAutoOrbiting }) => {
   const controlsRef = useRef<OrbitControlsType>(null);
   const targetCamPos = useRef(new THREE.Vector3(140, 95, 140));
   const targetLookAt = useRef(new THREE.Vector3(50, 45, 50));
@@ -123,6 +125,8 @@ const CameraController: React.FC<{
       minDistance={10}
       maxDistance={700}
       target={[50, 45, 50]}
+      autoRotate={isAutoOrbiting}
+      autoRotateSpeed={1.4}
     />
   );
 };
@@ -265,7 +269,6 @@ const EfficientFrontier: React.FC<EfficientFrontierProps> = ({ viewMode, modalit
   const lineRef = useRef<any>(null);
 
   const points = useMemo(() => {
-    // Dynamic calculation of the Pareto optimal non-dominated set
     interface NodePoint {
       id: string;
       x: number;
@@ -279,21 +282,18 @@ const EfficientFrontier: React.FC<EfficientFrontierProps> = ({ viewMode, modalit
         const x = m.financialMetrics.capex;
         const y = m.financialMetrics.attentionYield;
         const z = m.financialMetrics.retentionMoat;
-        // Economic efficiency: maximum output (Yield + Moat) relative to CapEx cost
         const efficiencyScore = (y * 0.55 + z * 0.45);
         return { id: m.id, x, y, z, efficiencyScore };
       } else {
         const x = m.cognitiveLoad;
         const y = m.systemicAgency;
         const z = m.sensoryUtilization;
-        // Biological efficiency: peak immersion (Sensory + Agency) across cognitive compute
         const efficiencyScore = (y * 0.5 + z * 0.5);
         return { id: m.id, x, y, z, efficiencyScore };
       }
     });
 
-    // Determine Pareto frontier:
-    // A point P is dominated if there exists Q such that Q.x <= P.x AND Q.y >= P.y AND Q.z >= P.z (with at least one strict inequality)
+    // Pareto non-dominated filtering
     const nonDominated = data.filter(p => {
       const isDominated = data.some(q => 
         q.id !== p.id &&
@@ -305,17 +305,14 @@ const EfficientFrontier: React.FC<EfficientFrontierProps> = ({ viewMode, modalit
       return !isDominated;
     });
 
-    // If Pareto set is too small, take the top efficiency champions
     let frontierNodes = nonDominated;
     if (frontierNodes.length < 4) {
       frontierNodes = [...data].sort((a, b) => b.efficiencyScore - a.efficiencyScore).slice(0, 6);
     }
 
-    // Sort along X-axis ascending for a smooth, progressive trajectory from low to high investment
     frontierNodes.sort((a, b) => a.x - b.x);
 
     const vectors = frontierNodes.map(n => new THREE.Vector3(n.x, n.y, n.z));
-
     if (vectors.length < 2) return [];
 
     const curve = new THREE.CatmullRomCurve3(vectors);
@@ -370,6 +367,7 @@ export const Scene: React.FC<SceneProps> = ({
   onSelectNode,
   modalities,
   cameraPreset = 'isometric',
+  isAutoOrbiting = false,
 }) => {
   const selectedNode = useMemo(
     () => modalities.find(m => m.id === selectedNodeId) || null,
@@ -391,26 +389,32 @@ export const Scene: React.FC<SceneProps> = ({
   return (
     <div style={{ width: '100%', height: '100%' }}>
       <Canvas
-        camera={{ position: [140, 95, 140], fov: 42 }}
+        camera={{ position: [140, 95, 140], fov: 40 }}
         gl={{ antialias: true, alpha: false, toneMapping: THREE.ACESFilmicToneMapping }}
         dpr={[1, 2]}
         onClick={handleBackgroundClick}
       >
-        <color attach="background" args={['#030508']} />
+        {/* Deep Studio Background */}
+        <color attach="background" args={['#020408']} />
 
-        <Stars radius={300} depth={60} count={1200} factor={2.5} saturation={0.2} fade speed={0.3} />
+        {/* Ambient Cosmic Shimmer & Starfield */}
+        <Stars radius={300} depth={80} count={1600} factor={2.8} saturation={0.25} fade speed={0.4} />
+        <Sparkles count={90} scale={[150, 150, 150]} size={2.0} speed={0.3} opacity={0.25} color="#00f0ff" />
+        <Sparkles count={50} scale={[150, 150, 150]} size={1.8} speed={0.2} opacity={0.2} color="#ffb700" />
 
-        {/* Ambient & Directional Lighting */}
-        <ambientLight intensity={0.4} />
-        <pointLight position={[100, 140, 100]} intensity={1.8} color="#ffffff" />
-        <pointLight position={[-40, 90, -40]} intensity={1.2} color="#00f0ff" />
-        <pointLight position={[90, -10, 90]} intensity={0.8} color="#ff0055" />
+        {/* Studio 3-Point Lighting */}
+        <ambientLight intensity={0.45} />
+        <pointLight position={[100, 140, 100]} intensity={2.0} color="#ffffff" />
+        <pointLight position={[-60, 90, -60]} intensity={1.5} color="#00f0ff" />
+        <pointLight position={[90, -10, 90]} intensity={1.0} color="#ff0055" />
+        <pointLight position={[50, 120, 50]} intensity={0.8} color="#ffb700" />
         <Environment preset="city" />
 
         <CameraController
           cameraPreset={cameraPreset}
           selectedNode={selectedNode}
           viewMode={viewMode}
+          isAutoOrbiting={isAutoOrbiting}
         />
 
         <MinimalAxes viewMode={viewMode} />
@@ -433,17 +437,28 @@ export const Scene: React.FC<SceneProps> = ({
 
         <EfficientFrontier viewMode={viewMode} modalities={modalities} />
 
+        {/* Luminous Floor Disc Reflection */}
+        <mesh position={[50, -0.2, 50]} rotation={[-Math.PI / 2, 0, 0]}>
+          <circleGeometry args={[75, 64]} />
+          <meshBasicMaterial
+            color={viewMode === 'economic' ? '#06b6d4' : '#6366f1'}
+            transparent
+            opacity={0.04}
+            depthWrite={false}
+          />
+        </mesh>
+
         {/* Single Clean Floor Grid */}
         <Grid
           position={[50, 0, 50]}
           args={[100, 100]}
           cellSize={10}
           cellThickness={0.4}
-          cellColor="#0b1320"
+          cellColor="#08101d"
           sectionSize={25}
           sectionThickness={0.8}
-          sectionColor="#152338"
-          fadeDistance={260}
+          sectionColor="#111e33"
+          fadeDistance={280}
         />
 
         {/* 3D Bubble Data Nodes */}
