@@ -20,16 +20,39 @@ interface SceneProps {
 }
 
 const getColorForSensory = (visual: number, auditory: number, physical: number): string => {
-  const cVisual = new THREE.Color('#00f0ff');   // Cyan (Photons)
-  const cAuditory = new THREE.Color('#ffb700'); // Amber (Acoustics)
-  const cPhysical = new THREE.Color('#ff0055'); // Magenta (Somatosensory/Physical)
+  // Pure channel dominance shortcuts for maximum punch
+  if (visual >= 70 && auditory <= 15 && physical <= 15) return '#00f5ff'; // Pure Electric Cyan
+  if (auditory >= 70 && visual <= 15 && physical <= 15) return '#ffb000'; // Pure Electric Gold/Amber
+  if (physical >= 50 && auditory <= 20 && visual <= 30) return '#ff0055'; // Pure Electric Magenta
 
-  const r = (cVisual.r * visual + cAuditory.r * auditory + cPhysical.r * physical) / 100;
-  const g = (cVisual.g * visual + cAuditory.g * auditory + cPhysical.g * physical) / 100;
-  const b = (cVisual.b * visual + cAuditory.b * auditory + cPhysical.b * physical) / 100;
+  // Chromatic angles in HSL color space:
+  // Visual (Photons): 185° (Cyan)
+  // Auditory (Acoustics): 42° (Amber/Gold)
+  // Physical (Somatosensory): 325° (Magenta/Pink)
+  const radVis = (185 * Math.PI) / 180;
+  const radAud = (42 * Math.PI) / 180;
+  const radPhy = (325 * Math.PI) / 180;
 
-  const finalColor = new THREE.Color(r, g, b);
-  return '#' + finalColor.getHexString();
+  // Amplify contrast with power weighting (1.5) so dominant sensory channels stand out crisply
+  const wV = Math.pow(Math.max(0, visual), 1.5);
+  const wA = Math.pow(Math.max(0, auditory), 1.5);
+  const wP = Math.pow(Math.max(0, physical), 1.5);
+  const sumW = wV + wA + wP || 1;
+
+  const nV = wV / sumW;
+  const nA = wA / sumW;
+  const nP = wP / sumW;
+
+  const x = nV * Math.cos(radVis) + nA * Math.cos(radAud) + nP * Math.cos(radPhy);
+  const y = nV * Math.sin(radVis) + nA * Math.sin(radAud) + nP * Math.sin(radPhy);
+
+  let angle = Math.atan2(y, x) * (180 / Math.PI);
+  if (angle < 0) angle += 360;
+
+  // Maximum saturation (100%) and optimal lightness (54%) for eye-popping visibility
+  const col = new THREE.Color();
+  col.setHSL(angle / 360, 1.0, 0.54);
+  return '#' + col.getHexString();
 };
 
 /* ── Smooth, Fluid Camera Controller with Auto-Orbit ───────── */

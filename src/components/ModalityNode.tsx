@@ -149,7 +149,7 @@ export const ModalityNode: React.FC<ModalityNodeProps> = ({
         <meshBasicMaterial
           color={color}
           transparent
-          opacity={isSelected ? 0.35 : (hovered ? 0.2 : 0.06)}
+          opacity={isSelected ? 0.5 : (hovered ? 0.35 : 0.15)}
           depthWrite={false}
         />
       </mesh>
@@ -192,11 +192,11 @@ export const ModalityNode: React.FC<ModalityNodeProps> = ({
 
         {/* Atmospheric Glow Shell */}
         <mesh ref={glowRef} raycast={noRaycast}>
-          <sphereGeometry args={[nodeRadius * 1.4, 32, 32]} />
+          <sphereGeometry args={[nodeRadius * 1.45, 32, 32]} />
           <meshBasicMaterial
             color={color}
             transparent
-            opacity={isSelected ? 0.4 : (hovered ? 0.25 : 0.08)}
+            opacity={isSelected ? 0.55 : (hovered ? 0.4 : 0.2)}
             depthWrite={false}
           />
         </mesh>
@@ -207,25 +207,25 @@ export const ModalityNode: React.FC<ModalityNodeProps> = ({
           <meshPhysicalMaterial
             color={color}
             emissive={color}
-            emissiveIntensity={isSelected ? 0.8 : (hovered ? 0.5 : 0.15)}
-            roughness={0.1}
-            metalness={0.2}
-            transmission={0.4}
-            thickness={0.8}
+            emissiveIntensity={isSelected ? 1.2 : (hovered ? 0.8 : 0.35)}
+            roughness={0.05}
+            metalness={0.05}
+            transmission={0.25}
+            thickness={0.5}
             transparent
-            opacity={0.85}
+            opacity={0.9}
           />
         </mesh>
 
         {/* Inner Luminous Core Sphere */}
         <mesh ref={sphereRef} raycast={noRaycast}>
-          <sphereGeometry args={[nodeRadius * 0.7, 32, 32]} />
+          <sphereGeometry args={[nodeRadius * 0.72, 32, 32]} />
           <meshStandardMaterial
             color={color}
             emissive={color}
-            emissiveIntensity={isSelected ? 2.5 : (hovered ? 1.8 : 0.8)}
-            roughness={0.2}
-            metalness={0.8}
+            emissiveIntensity={isSelected ? 3.0 : (hovered ? 2.2 : 1.3)}
+            roughness={0.1}
+            metalness={0.1}
             toneMapped={false}
           />
         </mesh>
