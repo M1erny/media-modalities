@@ -160,6 +160,8 @@ body {
 /* ─── Tooltip HUD ────────────────────────────────────────── */
 .modality-tooltip {
   width: 280px;
+  max-width: calc(100vw - 32px);
+  box-sizing: border-box;
   padding: 16px 18px;
   pointer-events: none;
   z-index: 10;

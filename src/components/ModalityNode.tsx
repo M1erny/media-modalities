@@ -1,5 +1,5 @@
 import { useRef, useState, useCallback, useMemo } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { FAMILY_CONFIG } from '../data/modalities';
@@ -32,6 +32,10 @@ export const ModalityNode: React.FC<ModalityNodeProps> = ({
   const selectorRing2Ref = useRef<THREE.Mesh>(null);
   const frontierHaloRef = useRef<THREE.Mesh>(null);
   const groundShadowRef = useRef<THREE.Mesh>(null);
+  
+  const tooltipRef = useRef<HTMLDivElement>(null);
+  const tempVec = useRef(new THREE.Vector3());
+  const { camera, size } = useThree();
   
   const [hovered, setHovered] = useState(false);
   
@@ -114,6 +118,59 @@ export const ModalityNode: React.FC<ModalityNodeProps> = ({
     if (groundShadowRef.current && groupRef.current) {
       groundShadowRef.current.position.x = groupRef.current.position.x;
       groundShadowRef.current.position.z = groupRef.current.position.z;
+    }
+
+    // ── Smart Viewport Clamping for Hover Tooltip ──────────────────
+    // Guarantees details card NEVER clips outside screen or behind top HUD
+    if (tooltipRef.current) {
+      if (hovered && !isSelected && groupRef.current) {
+        groupRef.current.getWorldPosition(tempVec.current);
+        tempVec.current.project(camera);
+
+        // Hide if behind camera near plane
+        if (tempVec.current.z > 1) {
+          tooltipRef.current.style.opacity = '0';
+        } else {
+          // Convert Normalized Device Coordinates (NDC) to screen pixels
+          const screenX = (tempVec.current.x * 0.5 + 0.5) * size.width;
+          const screenY = (-(tempVec.current.y * 0.5) + 0.5) * size.height;
+
+          const tooltipWidth = tooltipRef.current.offsetWidth || 280;
+          const tooltipHeight = tooltipRef.current.offsetHeight || 250;
+
+          // Safe margins to strictly avoid top HUD, camera presets, and screen bounds
+          const safeTopMargin = 82; // Clearance for top HUD & camera preset bar
+          const safeBottomMargin = 20;
+          const safeLeftMargin = 16;
+          const safeRightMargin = 16;
+          const verticalGap = 24;
+
+          // If placing above would collide with top margin, flip to below
+          const spaceAbove = screenY - tooltipHeight - verticalGap;
+          const placeBelow = spaceAbove < safeTopMargin;
+
+          const rawTop = placeBelow ? (screenY + verticalGap) : spaceAbove;
+          // Clamp top so the card is strictly within [safeTopMargin, size.height - safeBottomMargin - tooltipHeight]
+          const clampedTop = Math.max(
+            safeTopMargin,
+            Math.min(size.height - safeBottomMargin - tooltipHeight, rawTop)
+          );
+          const shiftY = clampedTop - screenY;
+
+          // Clamp horizontal position so card is strictly within [safeLeftMargin, size.width - safeRightMargin - tooltipWidth]
+          const rawLeft = screenX - tooltipWidth / 2;
+          const clampedLeft = Math.max(
+            safeLeftMargin,
+            Math.min(size.width - safeRightMargin - tooltipWidth, rawLeft)
+          );
+          const shiftX = clampedLeft - screenX;
+
+          tooltipRef.current.style.transform = `translate3d(${Math.round(shiftX)}px, ${Math.round(shiftY)}px, 0)`;
+          tooltipRef.current.style.opacity = '1';
+        }
+      } else {
+        tooltipRef.current.style.opacity = '0';
+      }
     }
   });
 
@@ -233,17 +290,26 @@ export const ModalityNode: React.FC<ModalityNodeProps> = ({
         {/* Tooltip on Hover (When Not Selected) */}
         <Html
           zIndexRange={[100, 0]}
-          center
+          center={false}
           style={{
             pointerEvents: 'none',
-            transition: 'opacity 0.2s ease, transform 0.2s ease',
-            opacity: hovered && !isSelected ? 1 : 0,
-            transform: hovered && !isSelected 
-              ? 'translate3d(-50%, -125%, 0) scale(1)' 
-              : 'translate3d(-50%, -115%, 0) scale(0.95)',
+            position: 'absolute',
+            top: 0,
+            left: 0,
           }}
         >
-          <div className="glass-panel modality-tooltip">
+          <div
+            ref={tooltipRef}
+            className="glass-panel modality-tooltip"
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              opacity: 0,
+              transition: 'opacity 0.2s ease',
+              willChange: 'transform, opacity',
+            }}
+          >
             {/* Header: Ticker + Family Badge + Frontier Tag */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
