@@ -255,7 +255,7 @@ const MinimalDropLine: React.FC<{ targetPos: [number, number, number]; isSelecte
   );
 };
 
-/* ── Pareto Frontier Curve ───────────────────────────────────── */
+/* ── Dynamic Pareto Efficient Frontier Curve ────────────────── */
 interface EfficientFrontierProps {
   viewMode: 'biological' | 'economic';
   modalities: Modality[];
@@ -265,39 +265,60 @@ const EfficientFrontier: React.FC<EfficientFrontierProps> = ({ viewMode, modalit
   const lineRef = useRef<any>(null);
 
   const points = useMemo(() => {
-    let rawPoints: THREE.Vector3[] = [];
-
-    const getNodePos = (id: string, mode: 'biological' | 'economic'): THREE.Vector3 => {
-      const node = modalities.find(n => n.id === id);
-      if (!node) return new THREE.Vector3(0, 0, 0);
-      if (mode === 'economic') {
-        return new THREE.Vector3(node.financialMetrics.capex, node.financialMetrics.attentionYield, node.financialMetrics.retentionMoat);
-      } else {
-        return new THREE.Vector3(node.cognitiveLoad, node.systemicAgency, node.sensoryUtilization);
-      }
-    };
-
-    if (viewMode === 'economic') {
-      rawPoints = [
-        getNodePos('short_form_video', 'economic'),
-        getNodePos('social_media', 'economic'),
-        getNodePos('irl_streaming', 'economic'),
-        getNodePos('podcasts', 'economic'),
-        getNodePos('video_games_grand', 'economic'),
-        getNodePos('gen_ai', 'economic'),
-      ];
-    } else {
-      rawPoints = [
-        getNodePos('short_form_video', 'biological'),
-        getNodePos('social_media', 'biological'),
-        getNodePos('irl_streaming', 'biological'),
-        getNodePos('tv_series', 'biological'),
-        getNodePos('video_games_open', 'biological'),
-        getNodePos('tabletop_rpgs', 'biological'),
-      ];
+    // Dynamic calculation of the Pareto optimal non-dominated set
+    interface NodePoint {
+      id: string;
+      x: number;
+      y: number;
+      z: number;
+      efficiencyScore: number;
     }
 
-    const curve = new THREE.CatmullRomCurve3(rawPoints);
+    const data: NodePoint[] = modalities.map(m => {
+      if (viewMode === 'economic') {
+        const x = m.financialMetrics.capex;
+        const y = m.financialMetrics.attentionYield;
+        const z = m.financialMetrics.retentionMoat;
+        // Economic efficiency: maximum output (Yield + Moat) relative to CapEx cost
+        const efficiencyScore = (y * 0.55 + z * 0.45);
+        return { id: m.id, x, y, z, efficiencyScore };
+      } else {
+        const x = m.cognitiveLoad;
+        const y = m.systemicAgency;
+        const z = m.sensoryUtilization;
+        // Biological efficiency: peak immersion (Sensory + Agency) across cognitive compute
+        const efficiencyScore = (y * 0.5 + z * 0.5);
+        return { id: m.id, x, y, z, efficiencyScore };
+      }
+    });
+
+    // Determine Pareto frontier:
+    // A point P is dominated if there exists Q such that Q.x <= P.x AND Q.y >= P.y AND Q.z >= P.z (with at least one strict inequality)
+    const nonDominated = data.filter(p => {
+      const isDominated = data.some(q => 
+        q.id !== p.id &&
+        q.x <= p.x &&
+        q.y >= p.y &&
+        q.z >= p.z &&
+        (q.x < p.x || q.y > p.y || q.z > p.z)
+      );
+      return !isDominated;
+    });
+
+    // If Pareto set is too small, take the top efficiency champions
+    let frontierNodes = nonDominated;
+    if (frontierNodes.length < 4) {
+      frontierNodes = [...data].sort((a, b) => b.efficiencyScore - a.efficiencyScore).slice(0, 6);
+    }
+
+    // Sort along X-axis ascending for a smooth, progressive trajectory from low to high investment
+    frontierNodes.sort((a, b) => a.x - b.x);
+
+    const vectors = frontierNodes.map(n => new THREE.Vector3(n.x, n.y, n.z));
+
+    if (vectors.length < 2) return [];
+
+    const curve = new THREE.CatmullRomCurve3(vectors);
     return curve.getPoints(50);
   }, [viewMode, modalities]);
 
@@ -308,7 +329,9 @@ const EfficientFrontier: React.FC<EfficientFrontierProps> = ({ viewMode, modalit
   });
 
   const color = viewMode === 'economic' ? '#10b981' : '#00f0ff';
-  const labelText = viewMode === 'economic' ? 'Pareto Yield Frontier' : 'Optimal Perception Frontier';
+  const labelText = viewMode === 'economic' ? '⚡ Pareto Yield Frontier' : '⚡ Pareto Neural Frontier';
+
+  if (points.length === 0) return null;
 
   return (
     <group>
@@ -410,7 +433,7 @@ export const Scene: React.FC<SceneProps> = ({
 
         <EfficientFrontier viewMode={viewMode} modalities={modalities} />
 
-        {/* Single Clean Floor Grid (XZ only — no cluttering side/back walls) */}
+        {/* Single Clean Floor Grid */}
         <Grid
           position={[50, 0, 50]}
           args={[100, 100]}
