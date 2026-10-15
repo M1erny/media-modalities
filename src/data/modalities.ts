@@ -1,634 +1,747 @@
-export type ModalityArchetype = 
-  | 'Algorithmic Attention Sink'
-  | 'High-Agency Sandbox'
-  | 'Deep Focus Moat'
-  | 'Physical Reality Immersion'
-  | 'High-CapEx Spectacle'
-  | 'Ambient Stream';
+import type { Family } from './taxonomy';
 
-export type ModalityFamily = 
-  | 'Interactive Gaming'
-  | 'Audio & Acoustic'
-  | 'Linear Audiovisual'
-  | 'Physical & Spatial'
-  | 'Text & Symbolic'
-  | 'Generative & Co-Creation';
+/**
+ * Every node is a consumer experience: something a person spends attention on.
+ * Technologies (AI, VR headsets, voice) are not nodes unless they are the experience itself;
+ * AI acts on the other nodes through `aiExposure`.
+ *
+ * Revenue = consumer spend + advertising at the point of the experience, global, USD.
+ * Excludes hardware and internet access. Each dollar is assigned to one node only;
+ * where a carve-out was needed the note says how.
+ *
+ * Hours are estimates of global annual hours of attention. They are built from
+ * time-use panels (GWI/DataReportal) and platform or attendance figures; most are
+ * order-of-magnitude estimates and are flagged as such.
+ */
 
-export const FAMILY_CONFIG: Record<ModalityFamily, { color: string; icon: string; description: string }> = {
-  'Interactive Gaming': {
-    color: '#a855f7', // Vivid Violet
-    icon: '🎮',
-    description: 'Closed-loop virtual state simulations with real-time player cybernetic feedback.'
-  },
-  'Audio & Acoustic': {
-    color: '#f59e0b', // Warm Amber
-    icon: '🎧',
-    description: 'Cochlear sound wave transmission capturing ambient and dedicated auditory attention.'
-  },
-  'Linear Audiovisual': {
-    color: '#06b6d4', // Cyan
-    icon: '📺',
-    description: 'Synchronized stream of moving imagery and sound in a unidirectional broadcast.'
-  },
-  'Physical & Spatial': {
-    color: '#10b981', // Emerald Green
-    icon: '🖐️',
-    description: 'Embodied multi-sensory presence involving physical space, vestibular motion, and tactile matter.'
-  },
-  'Text & Symbolic': {
-    color: '#38bdf8', // Sky Blue
-    icon: '📚',
-    description: 'Abstract static symbolic glyphs decoded via left-hemisphere phonological compute.'
-  },
-  'Generative & Co-Creation': {
-    color: '#f43f5e', // Neon Rose
-    icon: '🤖',
-    description: 'Dynamic conversational and prompt-driven generative synthesis and emergent learning.'
-  }
-};
+export type Confidence = 'High' | 'Medium' | 'Low';
 
-export interface FinancialMetrics {
-  capex: number;          // Supply-side Capital Intensity / Production Cost (0-100)
-  attentionYield: number; // Monetization & Capture Velocity per unit of time (0-100)
-  retentionMoat: number;  // Defensibility, Switching Costs & Customer LTV (0-100)
-  tamRating: 'Micro' | 'Small' | 'Medium' | 'Large' | 'Massive';
-  globalTamBillions: number; // Global annual addressable market ($B USD)
-  archetype: ModalityArchetype;
-  thesis: string;
-  risks: string;
-}
-
-export interface SensoryComposition {
-  visual: number;    // % visual photons (0-100)
-  auditory: number;  // % acoustic waves (0-100)
-  physical: number;  // % somatosensory / haptic / vestibular (0-100)
+export interface Source {
+  label: string;
+  url: string;
 }
 
 export interface Modality {
   id: string;
   name: string;
+  short: string;
   ticker: string;
-  family: ModalityFamily;
-  cognitiveLoad: number;      // x axis (biological): Cortical compute / working memory cost (0-100)
-  systemicAgency: number;     // y axis (biological): Closed-loop motor feedback control (0-100)
-  sensoryUtilization: number;  // z axis (biological): Perceptual channel bandwidth (0-100)
-  sensoryComposition: SensoryComposition;
-  financialMetrics: FinancialMetrics;
+  family: Family;
+  examples: string;
+
+  // Biological lens (0–100, see rubrics.ts)
+  cognitiveLoad: number;
+  agency: number;
+  sensoryBandwidth: number;
+  senses: { visual: number; auditory: number; physical: number }; // % mix, sums to 100
+
+  // Economic lens
+  supplyCostPerHour: number; // USD to make one hour of new experience (first-copy), order of magnitude
+  supplyCostNote: string;
+  moat: number; // 0–100, platform layer
+  aiExposure: number; // 0–100
+
+  // Market
+  revenueB: number;
+  revenueYear: number;
+  revenueNote: string;
+  revenueConfidence: Confidence;
+  hoursB: number; // billions of hours per year, global
+  hoursNote: string;
+  hoursConfidence: Confidence;
+  sources: Source[];
+
+  thesis: string;
+  risks: string;
 }
+
+const S = {
+  datareportalTv: { label: 'DataReportal Digital 2025: TV trends (3h13m/day)', url: 'https://datareportal.com/reports/digital-2025-sub-section-tv-trends-and-realities' },
+  datareportal2026: { label: 'DataReportal Digital 2026 Global Overview (social 2h21m/day)', url: 'https://datareportal.com/reports/digital-2026-global-overview-report' },
+  datareportalGames: { label: 'DataReportal April 2025 Statshot (59 min/day gaming)', url: 'https://datareportal.com/reports/digital-2025-april-global-statshot' },
+  gwiStreaming: { label: 'GWI: linear 1h47m vs streaming 1h22m per day', url: 'https://www.gwi.com/blog/streaming-trends-and-stats' },
+  newzoo: { label: 'Newzoo 2025 via PocketGamer.biz', url: 'https://www.pocketgamer.biz/global-games-revenue-surpasses-200bn-for-the-first-time-mobile-generates-113bn/' },
+  newzooPlayers: { label: 'Newzoo 2025 player counts via GameDev Reports', url: 'https://gamedevreports.substack.com/p/newzoo-the-games-market-in-2025' },
+  ampereRights: { label: 'Ampere: $64B sports rights 2025, streamers 20%', url: 'https://csimagazine.com/csi/Streamers-to-account-for-fifth-of-global-sports-rights-spend.php' },
+};
 
 export const modalitiesData: Modality[] = [
-  /* ── 1. INTERACTIVE GAMING (4) ── */
+  /* ── READ ───────────────────────────────────────────── */
   {
-    id: "video_games_open",
-    name: "Open-World MMOs",
-    ticker: "VGO",
-    family: "Interactive Gaming",
-    cognitiveLoad: 65,
-    systemicAgency: 85,
-    sensoryUtilization: 85,
-    sensoryComposition: { visual: 45, auditory: 30, physical: 25 },
-    financialMetrics: {
-      capex: 90,
-      attentionYield: 82,
-      retentionMoat: 92,
-      tamRating: "Large",
-      globalTamBillions: 95,
-      archetype: "High-Agency Sandbox",
-      thesis: "Persistent alternate reality sandbox. Massive upfront CapEx is amortized over multi-year expansions, microtransactions, and social guild lock-in.",
-      risks: "Extreme 5-7 year development cycles, catastrophic live-service churn risk at launch."
-    }
+    id: 'books',
+    name: 'Books',
+    short: 'Books',
+    ticker: 'BKS',
+    family: 'Read',
+    examples: 'Print and e-books, fiction and non-fiction',
+    cognitiveLoad: 75, agency: 5, sensoryBandwidth: 8,
+    senses: { visual: 90, auditory: 0, physical: 10 },
+    supplyCostPerHour: 6_000,
+    supplyCostNote: 'Advance, editing and design of a trade book (~$50k) over ~8 hours of reading.',
+    moat: 50, aiExposure: 60,
+    revenueB: 62, revenueYear: 2024,
+    revenueNote: 'Consumer book publishing ~$70B (IMARC) less ~$8B audiobooks, carved out to their own node.',
+    revenueConfidence: 'Medium',
+    hoursB: 270,
+    hoursNote: '~8 min/day per adult across ~5.5B adults. Time-use surveys put US reading for pleasure at ~16 min/day including press.',
+    hoursConfidence: 'Low',
+    sources: [
+      { label: 'IMARC: consumer book publishing $70B (2024)', url: 'https://www.imarcgroup.com/consumer-book-publishing-market' },
+    ],
+    thesis: 'The deepest-focus format, priced well above feeds per hour, with a backlist that compounds.',
+    risks: 'AI-generated supply floods discovery; reading time keeps losing share to video.',
   },
   {
-    id: "video_games_grand",
-    name: "Grand Strategy Games",
-    ticker: "STR",
-    family: "Interactive Gaming",
-    cognitiveLoad: 95,
-    systemicAgency: 95,
-    sensoryUtilization: 30,
-    sensoryComposition: { visual: 65, auditory: 15, physical: 20 },
-    financialMetrics: {
-      capex: 45,
-      attentionYield: 45,
-      retentionMoat: 96,
-      tamRating: "Small",
-      globalTamBillions: 12,
-      archetype: "Deep Focus Moat",
-      thesis: "Infinite combinatorial decision trees. High intellectual cognitive barrier produces extraordinary customer LTV and near-zero voluntary churn.",
-      risks: "Steep onboarding curve, small addressable user base."
-    }
+    id: 'news',
+    name: 'News & magazines',
+    short: 'News & mags',
+    ticker: 'NWS',
+    family: 'Read',
+    examples: 'Newspapers, news sites and apps, consumer magazines',
+    cognitiveLoad: 45, agency: 15, sensoryBandwidth: 12,
+    senses: { visual: 90, auditory: 0, physical: 10 },
+    supplyCostPerHour: 20_000,
+    supplyCostNote: 'Newsroom cost per hour of finished reading time; varies widely by outlet.',
+    moat: 30, aiExposure: 60,
+    revenueB: 154, revenueYear: 2025,
+    revenueNote: 'News publications $125.7B (WAN-IFRA) plus consumer magazines ~$28.6B (Marketintelo, low confidence).',
+    revenueConfidence: 'Medium',
+    hoursB: 1_200,
+    hoursNote: '~40 min/day of online and print press across ~5B internet users (GWI benchmarks), plus print-only readers.',
+    hoursConfidence: 'Low',
+    sources: [
+      { label: 'WAN-IFRA via Press Gazette: $125.7B (2025)', url: 'https://pressgazette.co.uk/media-audience-and-business-data/media-business-data/global-news-industry-revenue-level-in-2025-as-publishers-diversify-beyond-print/' },
+      { label: 'Marketintelo: magazine publishing $28.6B (2025)', url: 'https://marketintelo.com/report/magazine-publishing-market' },
+    ],
+    thesis: 'Large but shrinking pool; reader revenue is replacing print advertising, slowly.',
+    risks: 'Aggregators and AI answers sit between publishers and readers.',
   },
   {
-    id: "video_games_linear",
-    name: "Cinematic Action Games",
-    ticker: "VGL",
-    family: "Interactive Gaming",
-    cognitiveLoad: 60,
-    systemicAgency: 65,
-    sensoryUtilization: 80,
-    sensoryComposition: { visual: 50, auditory: 30, physical: 20 },
-    financialMetrics: {
-      capex: 75,
-      attentionYield: 75,
-      retentionMoat: 55,
-      tamRating: "Medium",
-      globalTamBillions: 48,
-      archetype: "High-CapEx Spectacle",
-      thesis: "Peak audiovisual cinematic fidelity blended with active tactile pacing, commanding premium $70 retail price points.",
-      risks: "Zero replay value upon completion, short sales velocity windows."
-    }
+    id: 'newsletters',
+    name: 'Newsletters',
+    short: 'Newsletters',
+    ticker: 'LTR',
+    family: 'Read',
+    examples: 'Substack, Beehiiv, Ghost and independent writers',
+    cognitiveLoad: 55, agency: 15, sensoryBandwidth: 8,
+    senses: { visual: 95, auditory: 0, physical: 5 },
+    supplyCostPerHour: 3_000,
+    supplyCostNote: 'A solo writer at ~$500 per issue for ~10 minutes of reading.',
+    moat: 30, aiExposure: 50,
+    revenueB: 0.9, revenueYear: 2025,
+    revenueNote: 'Substack writers grossed ~$450M (5M paid subscriptions); Beehiiv, Ghost and ad-funded independents roughly double it.',
+    revenueConfidence: 'Low',
+    hoursB: 1.7,
+    hoursNote: '~100M regular readers × ~20 min/week.',
+    hoursConfidence: 'Low',
+    sources: [
+      { label: 'Sacra: Substack at $45M/year (10% take)', url: 'https://sacra.com/research/substack-at-45m-year/' },
+      { label: 'Substack: 5M paid subscriptions (Mar 2025)', url: 'https://bestwriting.com/substack-statistics' },
+    ],
+    thesis: 'Tiny pool, high price per hour: readers pay a person, not a publisher.',
+    risks: 'Audience is portable, so platforms compete on take rate; inbox fatigue.',
   },
   {
-    id: "interactive_fiction",
-    name: "Interactive Fiction",
-    ticker: "INF",
-    family: "Interactive Gaming",
-    cognitiveLoad: 70,
-    systemicAgency: 75,
-    sensoryUtilization: 20,
-    sensoryComposition: { visual: 80, auditory: 5, physical: 15 },
-    financialMetrics: {
-      capex: 15,
-      attentionYield: 65,
-      retentionMoat: 65,
-      tamRating: "Small",
-      globalTamBillions: 6,
-      archetype: "Deep Focus Moat",
-      thesis: "High agency narrative branching produced at a fraction of 3D gaming CapEx, monetizing intense niche literary fandom.",
-      risks: "Saturated storefront distribution, limited mainstream penetration."
-    }
-  },
-
-  /* ── 2. AUDIO & ACOUSTIC (3) ── */
-  {
-    id: "podcasts",
-    name: "Podcasts",
-    ticker: "AUD",
-    family: "Audio & Acoustic",
-    cognitiveLoad: 30,
-    systemicAgency: 5,
-    sensoryUtilization: 20,
-    sensoryComposition: { visual: 0, auditory: 95, physical: 5 },
-    financialMetrics: {
-      capex: 15,
-      attentionYield: 75,
-      retentionMoat: 70,
-      tamRating: "Large",
-      globalTamBillions: 38,
-      archetype: "Ambient Stream",
-      thesis: "Monopolizes secondary ambient attention during transit and chores. Direct auditory intimacy commands premium endorsement CPMs.",
-      risks: "Supply saturation, fragmented measurement, low programmatic automation."
-    }
-  },
-  {
-    id: "ambient_music",
-    name: "Ambient Audio",
-    ticker: "AMB",
-    family: "Audio & Acoustic",
-    cognitiveLoad: 5,
-    systemicAgency: 0,
-    sensoryUtilization: 15,
-    sensoryComposition: { visual: 0, auditory: 100, physical: 0 },
-    financialMetrics: {
-      capex: 5,
-      attentionYield: 90,
-      retentionMoat: 55,
-      tamRating: "Large",
-      globalTamBillions: 28,
-      archetype: "Ambient Stream",
-      thesis: "Pure utility audio masking focus and sleep for uninterrupted hours with zero cognitive friction.",
-      risks: "Streaming royalty pool devaluation, AI generative track dilution."
-    }
-  },
-  {
-    id: "audio_assistants",
-    name: "Voice Assistants",
-    ticker: "IVA",
-    family: "Audio & Acoustic",
-    cognitiveLoad: 45,
-    systemicAgency: 70,
-    sensoryUtilization: 20,
-    sensoryComposition: { visual: 0, auditory: 85, physical: 15 },
-    financialMetrics: {
-      capex: 25,
-      attentionYield: 45,
-      retentionMoat: 45,
-      tamRating: "Medium",
-      globalTamBillions: 18,
-      archetype: "Ambient Stream",
-      thesis: "Hands-free voice conversational interface for home and vehicle coordination.",
-      risks: "Absence of screen monetization surfaces, high skill abandonment rate."
-    }
+    id: 'comics',
+    name: 'Comics, manga & webtoons',
+    short: 'Comics & manga',
+    ticker: 'MNG',
+    family: 'Read',
+    examples: 'Manga, webtoons, US and European comics',
+    cognitiveLoad: 45, agency: 5, sensoryBandwidth: 25,
+    senses: { visual: 95, auditory: 0, physical: 5 },
+    supplyCostPerHour: 30_000,
+    supplyCostNote: 'A manga chapter (~10 minutes) from an artist and assistants at ~$5k.',
+    moat: 60, aiExposure: 65,
+    revenueB: 18, revenueYear: 2025,
+    revenueNote: 'All comics including digital webtoons (Ken Research). Webtoons alone are estimated at $6–10B.',
+    revenueConfidence: 'Low',
+    hoursB: 36,
+    hoursNote: '~400M regular readers × ~15 min/day.',
+    hoursConfidence: 'Low',
+    sources: [
+      { label: 'Ken Research: global comic books $18B (2025)', url: 'https://www.kenresearch.com/global-comic-books-market' },
+    ],
+    thesis: 'The cheapest IP incubator in media; hits travel to anime, games and film.',
+    risks: 'Piracy; AI art tools commoditise the drawing.',
   },
 
-  /* ── 3. LINEAR AUDIOVISUAL (5) ── */
+  /* ── LISTEN ─────────────────────────────────────────── */
   {
-    id: "short_form_video",
-    name: "Short-Form Video",
-    ticker: "SFV",
-    family: "Linear Audiovisual",
-    cognitiveLoad: 10,
-    systemicAgency: 15,
-    sensoryUtilization: 70,
-    sensoryComposition: { visual: 55, auditory: 35, physical: 10 },
-    financialMetrics: {
-      capex: 5,
-      attentionYield: 98,
-      retentionMoat: 92,
-      tamRating: "Massive",
-      globalTamBillions: 190,
-      archetype: "Algorithmic Attention Sink",
-      thesis: "Zero cognitive decoding friction. Algorithmic variable reward loop captures immediate attention with near-zero supply-side production cost.",
-      risks: "Severe attention fragmentation, geopolitical platform bans, brand advertiser sensitivity."
-    }
+    id: 'music',
+    name: 'Recorded music',
+    short: 'Music',
+    ticker: 'MUS',
+    family: 'Listen',
+    examples: 'Streaming, downloads, physical, performance rights',
+    cognitiveLoad: 10, agency: 25, sensoryBandwidth: 30,
+    senses: { visual: 0, auditory: 100, physical: 0 },
+    supplyCostPerHour: 50_000,
+    supplyCostNote: 'Recording and production of ~an album-hour, blended across major and independent releases.',
+    moat: 45, aiExposure: 70,
+    revenueB: 29.6, revenueYear: 2024,
+    revenueNote: 'IFPI trade revenue. Includes ambient and focus music, which the earlier model counted separately.',
+    revenueConfidence: 'High',
+    hoursB: 1_500,
+    hoursNote: 'GWI puts music streaming near 1.5h/day per internet user; we take a lower ~50 min to exclude music on YouTube.',
+    hoursConfidence: 'Low',
+    sources: [
+      { label: 'IFPI Global Music Report via MBW: $29.6B (2024)', url: 'https://www.musicbusinessworldwide.com/global-recorded-music-revenues-hit-29-6bn-in-2024-up-4-8-yoy-users-of-paid-music-subscriptions-reach-752m' },
+    ],
+    thesis: 'The most-consumed format earns the least per hour: background attention is cheap.',
+    risks: 'AI-generated tracks dilute the royalty pool.',
   },
   {
-    id: "social_media",
-    name: "Social Media Feeds",
-    ticker: "SOC",
-    family: "Linear Audiovisual",
-    cognitiveLoad: 25,
-    systemicAgency: 45,
-    sensoryUtilization: 60,
-    sensoryComposition: { visual: 70, auditory: 20, physical: 10 },
-    financialMetrics: {
-      capex: 5,
-      attentionYield: 92,
-      retentionMoat: 94,
-      tamRating: "Massive",
-      globalTamBillions: 240,
-      archetype: "Algorithmic Attention Sink",
-      thesis: "Zero-cost UGC engine anchored by network effects. Social graph identity lock-in drives daily habitual check-ins across global populations.",
-      risks: "Platform fatigue, antitrust regulation, signal decay from algorithmic spam."
-    }
+    id: 'radio',
+    name: 'Radio',
+    short: 'Radio',
+    ticker: 'RAD',
+    family: 'Listen',
+    examples: 'AM/FM, DAB and online simulcast',
+    cognitiveLoad: 15, agency: 5, sensoryBandwidth: 25,
+    senses: { visual: 0, auditory: 100, physical: 0 },
+    supplyCostPerHour: 1_000,
+    supplyCostNote: 'Presenter and station staff per broadcast hour.',
+    moat: 20, aiExposure: 60,
+    revenueB: 29, revenueYear: 2024,
+    revenueNote: 'Radio advertising (MAGNA). Excludes public licence-fee funding.',
+    revenueConfidence: 'Medium',
+    hoursB: 1_100,
+    hoursNote: '~3B listeners × ~1 hour/day.',
+    hoursConfidence: 'Low',
+    sources: [{ label: 'MAGNA via RBR: radio ad sales ~$29B (2024)', url: 'https://rbr.com/?p=282160' }],
+    thesis: 'Still huge in the car and at work; flat money, ageing audience.',
+    risks: 'Connected cars hand the dashboard to streaming apps.',
   },
   {
-    id: "irl_streaming",
-    name: "Live Streaming",
-    ticker: "IRL",
-    family: "Linear Audiovisual",
-    cognitiveLoad: 20,
-    systemicAgency: 45,
-    sensoryUtilization: 50,
-    sensoryComposition: { visual: 50, auditory: 45, physical: 5 },
-    financialMetrics: {
-      capex: 10,
-      attentionYield: 85,
-      retentionMoat: 88,
-      tamRating: "Large",
-      globalTamBillions: 42,
-      archetype: "Algorithmic Attention Sink",
-      thesis: "Hyper-intense parasocial community lock-in. Captures multi-hour secondary screen attention with sub-linear creator equipment overhead.",
-      risks: "Creator burnout, unscripted conduct liability, non-programmatic monetization frictions."
-    }
+    id: 'podcasts',
+    name: 'Podcasts',
+    short: 'Podcasts',
+    ticker: 'POD',
+    family: 'Listen',
+    examples: 'Audio and video podcasts, ad-funded and paid',
+    cognitiveLoad: 45, agency: 10, sensoryBandwidth: 25,
+    senses: { visual: 0, auditory: 100, physical: 0 },
+    supplyCostPerHour: 1_000,
+    supplyCostNote: 'Most shows are made by one or two people; premium productions run $10k+ per hour.',
+    moat: 20, aiExposure: 60,
+    revenueB: 5.2, revenueYear: 2025,
+    revenueNote: 'Global podcast ad spend (WARC). Owl & Co puts the wider podcast economy at $9.2B.',
+    revenueConfidence: 'Medium',
+    hoursB: 200,
+    hoursNote: '~600M monthly listeners × ~6.5 hours/week.',
+    hoursConfidence: 'Low',
+    sources: [
+      { label: 'WARC via Inside Radio: >$5B ad spend (2025)', url: 'https://www.insideradio.com/free/warc-projects-global-podcast-ad-revenue-will-top-5-billion-in-2025/article_7ba2f900-e9da-11ef-804c-7ba74ef11a6b.html' },
+      { label: 'Owl & Co via Sounds Profitable: $9.2B (2025)', url: 'https://soundsprofitable.com/?p=12287' },
+    ],
+    thesis: 'Intimate, long sessions, but monetised at radio-like rates.',
+    risks: 'Open RSS distribution means little lock-in; video podcasts move to YouTube.',
   },
   {
-    id: "tv_series",
-    name: "Prestige TV",
-    ticker: "STG",
-    family: "Linear Audiovisual",
-    cognitiveLoad: 45,
-    systemicAgency: 5,
-    sensoryUtilization: 70,
-    sensoryComposition: { visual: 60, auditory: 40, physical: 0 },
-    financialMetrics: {
-      capex: 80,
-      attentionYield: 65,
-      retentionMoat: 70,
-      tamRating: "Large",
-      globalTamBillions: 110,
-      archetype: "High-CapEx Spectacle",
-      thesis: "Multi-week episodic narrative hooks anchor streaming subscriber cohorts against quarterly subscription churn.",
-      risks: "Content overproduction, talent wage inflation, consumer subscription fatigue."
-    }
-  },
-  {
-    id: "movies",
-    name: "Feature Films",
-    ticker: "MVI",
-    family: "Linear Audiovisual",
-    cognitiveLoad: 40,
-    systemicAgency: 5,
-    sensoryUtilization: 75,
-    sensoryComposition: { visual: 60, auditory: 40, physical: 0 },
-    financialMetrics: {
-      capex: 95,
-      attentionYield: 55,
-      retentionMoat: 35,
-      tamRating: "Large",
-      globalTamBillions: 80,
-      archetype: "High-CapEx Spectacle",
-      thesis: "Cultural flagship IP generation. Theatrical prestige establishes franchise IP value amortized over decades across merchandise and parks.",
-      risks: "High hit dependency ($250M+ budgets), shrinking post-theatrical distribution windows."
-    }
+    id: 'audiobooks',
+    name: 'Audiobooks',
+    short: 'Audiobooks',
+    ticker: 'ABK',
+    family: 'Listen',
+    examples: 'Audible, Spotify audiobooks, Storytel',
+    cognitiveLoad: 60, agency: 5, sensoryBandwidth: 25,
+    senses: { visual: 0, auditory: 100, physical: 0 },
+    supplyCostPerHour: 400,
+    supplyCostNote: 'Narration and production at ~$300–500 per finished hour, on top of the book itself.',
+    moat: 55, aiExposure: 90,
+    revenueB: 8, revenueYear: 2024,
+    revenueNote: 'Estimates range from $7B (Deloitte) to $8.7B (Grand View Research).',
+    revenueConfidence: 'Medium',
+    hoursB: 60,
+    hoursNote: '~250M listeners × ~40 min/day on listening days.',
+    hoursConfidence: 'Low',
+    sources: [
+      { label: 'Deloitte TMT Predictions 2024: ~$7B', url: 'https://www.deloitte.com/us/en/insights/industry/technology/technology-media-and-telecom-predictions/2024/consumer-audio-market-trends-predict-more-global-consumers-in-2024.html' },
+    ],
+    thesis: 'Books for commuters; libraries lock listeners to a platform.',
+    risks: 'AI narration collapses production cost and floods the catalogue.',
   },
 
-  /* ── 4. PHYSICAL & SPATIAL REALITY (6) ── */
+  /* ── WATCH ──────────────────────────────────────────── */
   {
-    id: "larp",
-    name: "Live Action Role Play",
-    ticker: "LRP",
-    family: "Physical & Spatial",
-    cognitiveLoad: 75,
-    systemicAgency: 90,
-    sensoryUtilization: 98,
-    sensoryComposition: { visual: 30, auditory: 30, physical: 40 },
-    financialMetrics: {
-      capex: 25,
-      attentionYield: 40,
-      retentionMoat: 92,
-      tamRating: "Micro",
-      globalTamBillions: 2,
-      archetype: "Physical Reality Immersion",
-      thesis: "The empirical ceiling of sensory immersion. Unmediated physical gravity, tactile textures, weather, and embodied presence.",
-      risks: "Zero operational scalability, intense logistical coordination friction."
-    }
+    id: 'short_video',
+    name: 'Short-video apps',
+    short: 'Short video',
+    ticker: 'SFV',
+    family: 'Watch',
+    examples: 'TikTok, Douyin, Kuaishou (Reels and Shorts sit with their parent platforms)',
+    cognitiveLoad: 15, agency: 30, sensoryBandwidth: 50,
+    senses: { visual: 55, auditory: 40, physical: 5 },
+    supplyCostPerHour: 50,
+    supplyCostNote: 'User-generated; the platform pays nothing for an hour of clips.',
+    moat: 75, aiExposure: 70,
+    revenueB: 83, revenueYear: 2025,
+    revenueNote: 'Douyin ads ~$42B and TikTok ads ~$30B (estimates; ByteDance does not disclose) plus Kuaishou online marketing RMB81.5B (~$11.4B). E-commerce excluded.',
+    revenueConfidence: 'Low',
+    hoursB: 1_200,
+    hoursNote: 'TikTok ~1.2B daily users × ~60 min, Douyin ~650M × ~110 min, Kuaishou ~410M × ~130 min.',
+    hoursConfidence: 'Low',
+    sources: [
+      { label: 'Kuaishou FY2025 results', url: 'https://kuaishou.gcs-web.com/news-releases/news-release-details/kuaishou-technology-announces-fourth-quarter-and-full-year-2025' },
+      { label: 'Sacra: ByteDance revenue estimates', url: 'https://sacra.com/research/bytedance' },
+      { label: 'Douyin ad revenue estimate (~$39B, 2024)', url: 'https://digitalinasia.com/how-douyin-advertising-actually-works-a-guide-for-non-chinese-speakers/' },
+    ],
+    thesis: 'The purest attention engine: near-zero supply cost and an algorithm that learns from every swipe.',
+    risks: 'Geopolitical bans; the format itself is easy to copy.',
   },
   {
-    id: "theme_park_rides",
-    name: "Theme Park Rides",
-    ticker: "TPK",
-    family: "Physical & Spatial",
-    cognitiveLoad: 15,
-    systemicAgency: 5,
-    sensoryUtilization: 95,
-    sensoryComposition: { visual: 30, auditory: 20, physical: 50 },
-    financialMetrics: {
-      capex: 98,
-      attentionYield: 58,
-      retentionMoat: 80,
-      tamRating: "Medium",
-      globalTamBillions: 75,
-      archetype: "Physical Reality Immersion",
-      thesis: "Ultimate capital barrier moat. Physical G-forces, moisture, dynamic kinetics, and IP immersion anchor billion-dollar destination resorts.",
-      risks: "Multi-decade capital payback timelines, macroeconomic tourism sensitivity."
-    }
+    id: 'social',
+    name: 'Social networks',
+    short: 'Social networks',
+    ticker: 'SOC',
+    family: 'Watch',
+    examples: 'Facebook, Instagram (incl. Reels), WeChat Moments and Channels, Snap, Pinterest, X, LinkedIn, Reddit',
+    cognitiveLoad: 25, agency: 45, sensoryBandwidth: 45,
+    senses: { visual: 70, auditory: 25, physical: 5 },
+    supplyCostPerHour: 20,
+    supplyCostNote: 'User-generated; supply is free.',
+    moat: 95, aiExposure: 50,
+    revenueB: 239, revenueYear: 2025,
+    revenueNote: 'Meta ads $196.2B, Tencent marketing services RMB145B (~$20B), Snap $5.9B, Pinterest $4.2B, Reddit $2.2B, plus estimates for LinkedIn (~$6B), X (~$2.3B) and Weibo (~$1.7B).',
+    revenueConfidence: 'High',
+    hoursB: 2_200,
+    hoursNote: 'GWI: 2h21m/day of social media across ~5B users (~4.3T hours), less short-video apps, YouTube and messaging.',
+    hoursConfidence: 'Low',
+    sources: [
+      { label: 'Meta FY2025 10-K', url: 'https://www.sec.gov/Archives/edgar/data/1326801/000162828026003942/meta-20251231.htm' },
+      { label: 'Tencent 2025 annual results', url: 'https://technode.global/prnasia/tencent-announces-2025-annual-and-fourth-quarter-results/' },
+      { label: 'Snap FY2025 results', url: 'https://investor.snap.com/news/news-details/2026/Snap-Inc--Announces-Fourth-Quarter-and-Full-Year-2025-Financial-Results/' },
+      { label: 'Pinterest FY2025 results', url: 'https://www.businesswire.com/news/home/20260212059914/en/Pinterest-Announces-Fourth-Quarter-and-Full-Year-2025-Results-Delivers-14-Revenue-Growth-and-Record-Users' },
+      { label: 'Reddit FY2025 10-K', url: 'https://www.sec.gov/Archives/edgar/data/1713445/000171344526000022/rddt-20251231.htm' },
+      S.datareportal2026,
+    ],
+    thesis: 'The largest single revenue pool in media, built on a social graph nobody can copy.',
+    risks: 'Regulation, ageing core users, attention shifting to pure algorithmic feeds.',
   },
   {
-    id: "escape_rooms",
-    name: "Escape Rooms",
-    ticker: "ESC",
-    family: "Physical & Spatial",
-    cognitiveLoad: 85,
-    systemicAgency: 85,
-    sensoryUtilization: 90,
-    sensoryComposition: { visual: 30, auditory: 15, physical: 55 },
-    financialMetrics: {
-      capex: 55,
-      attentionYield: 55,
-      retentionMoat: 25,
-      tamRating: "Micro",
-      globalTamBillions: 5,
-      archetype: "Physical Reality Immersion",
-      thesis: "Embodied collaborative physical puzzle-solving yielding profitable local corporate and consumer bookings.",
-      risks: "Zero customer replayability once room puzzle is resolved, high commercial real estate rents."
-    }
+    id: 'youtube',
+    name: 'YouTube & creator video',
+    short: 'YouTube',
+    ticker: 'YTB',
+    family: 'Watch',
+    examples: 'YouTube long-form, Shorts, Premium and Music',
+    cognitiveLoad: 35, agency: 30, sensoryBandwidth: 55,
+    senses: { visual: 60, auditory: 40, physical: 0 },
+    supplyCostPerHour: 2_000,
+    supplyCostNote: 'Creator-made; professional channels spend far more, most spend almost nothing.',
+    moat: 90, aiExposure: 65,
+    revenueB: 50, revenueYear: 2025,
+    revenueNote: 'Ads $40.4B plus subscriptions (~$60B together, per Alphabet), less an estimated ~$10B for YouTube TV and NFL Sunday Ticket, which are pay TV and sport.',
+    revenueConfidence: 'Medium',
+    hoursB: 700,
+    hoursNote: '~2.5B users × ~45 min/day (Digital i measures ~99 min/day in 20 mostly richer markets).',
+    hoursConfidence: 'Low',
+    sources: [
+      { label: 'MBW: YouTube ads + subscriptions > $60B (2025)', url: 'https://www.musicbusinessworldwide.com/youtubes-subscription-business-is-now-generating-around-20bn-a-year-with-music-a-key-growth-driver' },
+      { label: 'MediaPost / Digital i: YouTube 99 min/day', url: 'https://www.mediapost.com/publications/article/415553/youtube-leads-netflix-in-global-daily-viewing.html' },
+    ],
+    thesis: 'The default screen for creators, now the most-watched service on living-room TVs.',
+    risks: 'Creator payouts cap margins; short-video competition for young viewers.',
   },
   {
-    id: "live_theater",
-    name: "Live Theater",
-    ticker: "THR",
-    family: "Physical & Spatial",
-    cognitiveLoad: 55,
-    systemicAgency: 5,
-    sensoryUtilization: 60,
-    sensoryComposition: { visual: 50, auditory: 45, physical: 5 },
-    financialMetrics: {
-      capex: 65,
-      attentionYield: 40,
-      retentionMoat: 60,
-      tamRating: "Micro",
-      globalTamBillions: 14,
-      archetype: "High-CapEx Spectacle",
-      thesis: "Irreplaceable real-time human presence and physical acoustic staging commanding high premium ticket yields.",
-      risks: "Fixed seating capacity ceiling, high physical operating leverage."
-    }
+    id: 'live_streaming',
+    name: 'Live streaming',
+    short: 'Live streaming',
+    ticker: 'IRL',
+    family: 'Watch',
+    examples: 'Twitch, Kick, Bigo, Huya, Douyu, Kuaishou live',
+    cognitiveLoad: 25, agency: 45, sensoryBandwidth: 50,
+    senses: { visual: 55, auditory: 45, physical: 0 },
+    supplyCostPerHour: 100,
+    supplyCostNote: "A streamer's time and kit.",
+    moat: 60, aiExposure: 35,
+    revenueB: 10.5, revenueYear: 2025,
+    revenueNote: 'Kuaishou live RMB39.1B (~$5.4B), Twitch ~$1.9B (estimate), JOYY/Bigo $1.5B, Huya and Douyu ~$1.5B. Douyin live gifting sits inside ByteDance and is not separable.',
+    revenueConfidence: 'Medium',
+    hoursB: 200,
+    hoursNote: 'Twitch ~20B hours watched a year; Chinese live apps several times that.',
+    hoursConfidence: 'Low',
+    sources: [
+      { label: 'Kuaishou FY2025 results', url: 'https://kuaishou.gcs-web.com/news-releases/news-release-details/kuaishou-technology-announces-fourth-quarter-and-full-year-2025' },
+      { label: 'JOYY FY2025 results', url: 'https://www.barchart.com/story/news/678865/joyy-reports-fourth-quarter-and-fy2025-financial-results-q4-revenue-returns-to-yoy-growth-bigo-ads-momentum-continues-delivering-strong-shareholder-returns' },
+    ],
+    thesis: 'Parasocial communities that tip; cheap to supply, sticky while the streamer stays.',
+    risks: 'Streamer churn to rival platforms; gifting regulation in China.',
   },
   {
-    id: "television_theater",
-    name: "Broadcast Theater",
-    ticker: "TTV",
-    family: "Physical & Spatial",
-    cognitiveLoad: 65,
-    systemicAgency: 5,
-    sensoryUtilization: 45,
-    sensoryComposition: { visual: 60, auditory: 40, physical: 0 },
-    financialMetrics: {
-      capex: 30,
-      attentionYield: 35,
-      retentionMoat: 55,
-      tamRating: "Small",
-      globalTamBillions: 4,
-      archetype: "High-CapEx Spectacle",
-      thesis: "Bridges intellectual stage dialogue with broadcast reach for dedicated cultural audience cohorts.",
-      risks: "Demographic audience aging, reliance on state public media funding."
-    }
+    id: 'streaming',
+    name: 'Streaming TV & film',
+    short: 'Streaming TV',
+    ticker: 'SVD',
+    family: 'Watch',
+    examples: 'Netflix, Disney+, Max, Prime Video, iQIYI, FAST channels',
+    cognitiveLoad: 45, agency: 20, sensoryBandwidth: 65,
+    senses: { visual: 60, auditory: 40, physical: 0 },
+    supplyCostPerHour: 3_000_000,
+    supplyCostNote: 'Blended: premium scripted runs $5–15M per hour, unscripted far less.',
+    moat: 45, aiExposure: 55,
+    revenueB: 164, revenueYear: 2025,
+    revenueNote: 'Ampere: $177B subscriptions plus advertising, less the ~20% of sports rights paid by streamers (moved to Sports viewing).',
+    revenueConfidence: 'Medium',
+    hoursB: 1_200,
+    hoursNote: 'Netflix reports ~190B hours a year; scaled up for other services and China.',
+    hoursConfidence: 'Low',
+    sources: [
+      { label: 'Ampere via Señal News: $177B (2025)', url: 'https://senalnews.com/en/data/global-streaming-subscription-revenue-tops-150-billion-as-industry-eyes-200-billion-by-2030' },
+      S.gwiStreaming,
+    ],
+    thesis: 'Scale game: high content cost per hour only works with hundreds of millions of subscribers.',
+    risks: 'Churn, content inflation, and YouTube taking the TV screen.',
   },
   {
-    id: "vr_experiences",
-    name: "Virtual Reality",
-    ticker: "VRX",
-    family: "Physical & Spatial",
-    cognitiveLoad: 70,
-    systemicAgency: 75,
-    sensoryUtilization: 80,
-    sensoryComposition: { visual: 50, auditory: 35, physical: 15 },
-    financialMetrics: {
-      capex: 80,
-      attentionYield: 65,
-      retentionMoat: 45,
-      tamRating: "Small",
-      globalTamBillions: 22,
-      archetype: "Physical Reality Immersion",
-      thesis: "Highest digital presence medium. Enclosed head-mounted display completely blocks peripheral real-world distractions.",
-      risks: "Headset ergonomics and weight friction, visual nausea, fragmented app ecosystem."
-    }
-  },
-
-  /* ── 5. TEXT & SYMBOLIC (3) ── */
-  {
-    id: "books",
-    name: "Fiction Books",
-    ticker: "FIC",
-    family: "Text & Symbolic",
-    cognitiveLoad: 80,
-    systemicAgency: 5,
-    sensoryUtilization: 5,
-    sensoryComposition: { visual: 90, auditory: 0, physical: 10 },
-    financialMetrics: {
-      capex: 15,
-      attentionYield: 35,
-      retentionMoat: 75,
-      tamRating: "Medium",
-      globalTamBillions: 32,
-      archetype: "Deep Focus Moat",
-      thesis: "Asymmetrical imagination engine. Minimalist abstract glyphs trigger internal high-resolution neural rendering with near-zero reproduction costs.",
-      risks: "High cognitive effort competing against frictionless digital video feeds."
-    }
+    id: 'linear_tv',
+    name: 'Linear TV',
+    short: 'Linear TV',
+    ticker: 'LTV',
+    family: 'Watch',
+    examples: 'Broadcast and pay TV, news channels (sport carved out)',
+    cognitiveLoad: 30, agency: 5, sensoryBandwidth: 60,
+    senses: { visual: 60, auditory: 40, physical: 0 },
+    supplyCostPerHour: 300_000,
+    supplyCostNote: 'Blend of news, unscripted and scripted programming.',
+    moat: 40, aiExposure: 45,
+    revenueB: 241, revenueYear: 2025,
+    revenueNote: 'Linear TV ads $123.5B (WPP Media) plus pay-TV $169B (Omdia), less ~80% of sports rights (moved to Sports viewing).',
+    revenueConfidence: 'Medium',
+    hoursB: 3_500,
+    hoursNote: 'GWI: 1h47m/day of linear TV across ~5B internet users, plus ~1B offline viewers; ~12% assumed to be sport.',
+    hoursConfidence: 'Low',
+    sources: [
+      { label: 'WPP Media via Marketing Brew: linear TV ads $123.5B', url: 'https://www.marketingbrew.com/stories/2025/12/09/total-global-ad-revenue-grew-nearly-9-in-2025-wpp-media' },
+      { label: 'Omdia: pay-TV $169B (2025)', url: 'https://omdia.tech.informa.com/pr/2025/oct/global-tv-and-video-market-to-reach-1-trillion-by-2030-as-online-video-surges' },
+      S.datareportalTv,
+      S.gwiStreaming,
+    ],
+    thesis: 'Still the second-largest pool and the most hours of any experience; managed decline.',
+    risks: 'Cord-cutting, and sport (its last anchor) moving to streamers.',
   },
   {
-    id: "textbooks",
-    name: "Non-Fiction Books",
-    ticker: "NFX",
-    family: "Text & Symbolic",
-    cognitiveLoad: 90,
-    systemicAgency: 5,
-    sensoryUtilization: 5,
-    sensoryComposition: { visual: 90, auditory: 0, physical: 10 },
-    financialMetrics: {
-      capex: 30,
-      attentionYield: 20,
-      retentionMoat: 85,
-      tamRating: "Small",
-      globalTamBillions: 16,
-      archetype: "Deep Focus Moat",
-      thesis: "High-density domain knowledge transmission historically protected by academic curriculum adoption moats.",
-      risks: "Disintermediation by multimodal AI synthesis and interactive tutors."
-    }
-  },
-  {
-    id: "comic_books",
-    name: "Comic Books",
-    ticker: "MNG",
-    family: "Text & Symbolic",
-    cognitiveLoad: 50,
-    systemicAgency: 5,
-    sensoryUtilization: 35,
-    sensoryComposition: { visual: 90, auditory: 0, physical: 10 },
-    financialMetrics: {
-      capex: 35,
-      attentionYield: 60,
-      retentionMoat: 80,
-      tamRating: "Medium",
-      globalTamBillions: 26,
-      archetype: "Deep Focus Moat",
-      thesis: "Efficient global IP incubation pipeline. Low consumption friction paired with deep character fandom creates high adaptation equity.",
-      risks: "Digital piracy, creative talent retention, distribution aggregation."
-    }
+    id: 'sports_viewing',
+    name: 'Sports viewing',
+    short: 'Sports viewing',
+    ticker: 'SPV',
+    family: 'Watch',
+    examples: 'Live sport on TV and streaming',
+    cognitiveLoad: 40, agency: 5, sensoryBandwidth: 65,
+    senses: { visual: 60, auditory: 40, physical: 0 },
+    supplyCostPerHour: 5_000_000,
+    supplyCostNote: "The content is the match: a top league's wage bill per match-hour (Premier League ≈ £4B / 760 hours).",
+    moat: 85, aiExposure: 10,
+    revenueB: 64, revenueYear: 2025,
+    revenueNote: 'Global sports media rights (Ampere), used as a proxy for the TV and streaming revenue sport generates. Treat it as a lower bound.',
+    revenueConfidence: 'Medium',
+    hoursB: 500,
+    hoursNote: '~12% of linear TV time plus a slice of streaming.',
+    hoursConfidence: 'Low',
+    sources: [S.ampereRights],
+    thesis: 'Live, scarce and un-skippable: the last appointment viewing, protected by league IP.',
+    risks: 'Rights inflation outruns what broadcasters can earn back.',
   },
 
-  /* ── 6. GENERATIVE & CO-CREATION (4) ── */
+  /* ── PLAY ───────────────────────────────────────────── */
   {
-    id: "gen_ai",
-    name: "Generative AI",
-    ticker: "GAI",
-    family: "Generative & Co-Creation",
-    cognitiveLoad: 70,
-    systemicAgency: 95,
-    sensoryUtilization: 25,
-    sensoryComposition: { visual: 75, auditory: 5, physical: 20 },
-    financialMetrics: {
-      capex: 80,
-      attentionYield: 85,
-      retentionMoat: 90,
-      tamRating: "Massive",
-      globalTamBillions: 130,
-      archetype: "High-Agency Sandbox",
-      thesis: "Infinite creative feedback loop. User commands state transformation with instant visual/textual synthesis, achieving peak agency.",
-      risks: "Inference compute cost pressure, model commoditization, copyright litigation."
-    }
+    id: 'mobile_games',
+    name: 'Mobile games',
+    short: 'Mobile games',
+    ticker: 'MOB',
+    family: 'Play',
+    examples: 'Honor of Kings, Candy Crush, Royal Match, Roblox mobile',
+    cognitiveLoad: 35, agency: 60, sensoryBandwidth: 45,
+    senses: { visual: 60, auditory: 25, physical: 15 },
+    supplyCostPerHour: 50_000,
+    supplyCostNote: 'Build plus live operations, spread over hundreds of hours of play per title.',
+    moat: 50, aiExposure: 55,
+    revenueB: 113.3, revenueYear: 2025,
+    revenueNote: 'Newzoo. More than half of all games revenue.',
+    revenueConfidence: 'High',
+    hoursB: 730,
+    hoursNote: '2.985B players (Newzoo) × ~40 min/day.',
+    hoursConfidence: 'Low',
+    sources: [S.newzoo, S.newzooPlayers],
+    thesis: 'The biggest games market by far, and the most agency per dollar a lean-back user will try.',
+    risks: 'App-store fees and privacy rules raise acquisition costs; hit-driven.',
   },
   {
-    id: "interactive_learning",
-    name: "Interactive E-Learning",
-    ticker: "ELN",
-    family: "Generative & Co-Creation",
-    cognitiveLoad: 75,
-    systemicAgency: 80,
-    sensoryUtilization: 40,
-    sensoryComposition: { visual: 65, auditory: 15, physical: 20 },
-    financialMetrics: {
-      capex: 50,
-      attentionYield: 60,
-      retentionMoat: 85,
-      tamRating: "Large",
-      globalTamBillions: 65,
-      archetype: "Deep Focus Moat",
-      thesis: "Self-improvement psychology coupled with daily gamified streak retention drives resilient recurring SaaS cash flows.",
-      risks: "Skill plateau drop-off, AI conversational tutor disintermediation."
-    }
+    id: 'console_games',
+    name: 'Console games',
+    short: 'Console games',
+    ticker: 'CON',
+    family: 'Play',
+    examples: 'PlayStation, Xbox, Nintendo Switch',
+    cognitiveLoad: 65, agency: 80, sensoryBandwidth: 70,
+    senses: { visual: 50, auditory: 30, physical: 20 },
+    supplyCostPerHour: 2_000_000,
+    supplyCostNote: 'AAA budgets ($200M+) over 30–50 hours of content, blended with cheaper titles.',
+    moat: 75, aiExposure: 45,
+    revenueB: 44.7, revenueYear: 2025,
+    revenueNote: 'Newzoo, software and services (no hardware).',
+    revenueConfidence: 'High',
+    hoursB: 235,
+    hoursNote: '645M players (Newzoo) × ~1 hour/day.',
+    hoursConfidence: 'Low',
+    sources: [S.newzoo, S.newzooPlayers],
+    thesis: 'Ecosystem lock-in: your library and friends list live on one console.',
+    risks: 'Budgets rising faster than prices; long, risky development cycles.',
   },
   {
-    id: "tabletop_rpgs",
-    name: "Tabletop RPGs",
-    ticker: "TRP",
-    family: "Generative & Co-Creation",
-    cognitiveLoad: 85,
-    systemicAgency: 100,
-    sensoryUtilization: 30,
-    sensoryComposition: { visual: 30, auditory: 60, physical: 10 },
-    financialMetrics: {
-      capex: 10,
-      attentionYield: 50,
-      retentionMoat: 90,
-      tamRating: "Small",
-      globalTamBillions: 8,
-      archetype: "High-Agency Sandbox",
-      thesis: "Unbounded human collective imagination. Zero rendering CapEx paired with profound peer social commitments and lifetime rulebook collector value.",
-      risks: "High onboarding friction, scheduling logistics, niche addressable market."
-    }
+    id: 'pc_games',
+    name: 'PC games',
+    short: 'PC games',
+    ticker: 'PCG',
+    family: 'Play',
+    examples: 'Steam, League of Legends, strategy and MMOs',
+    cognitiveLoad: 75, agency: 85, sensoryBandwidth: 65,
+    senses: { visual: 55, auditory: 30, physical: 15 },
+    supplyCostPerHour: 500_000,
+    supplyCostNote: 'AAA and MMOs spread over hundreds or thousands of hours, plus a long indie tail.',
+    moat: 75, aiExposure: 45,
+    revenueB: 43.6, revenueYear: 2025,
+    revenueNote: 'Newzoo.',
+    revenueConfidence: 'High',
+    hoursB: 340,
+    hoursNote: '936M players (Newzoo) × ~1 hour/day.',
+    hoursConfidence: 'Low',
+    sources: [S.newzoo, S.newzooPlayers],
+    thesis: 'Deepest agency and longest sessions; Steam is the closest thing gaming has to a social graph.',
+    risks: 'Competitive-game churn; concentration in a few forever-games.',
   },
   {
-    id: "digital_art_nfts",
-    name: "Digital Collectibles",
-    ticker: "NFT",
-    family: "Generative & Co-Creation",
-    cognitiveLoad: 40,
-    systemicAgency: 35,
-    sensoryUtilization: 25,
-    sensoryComposition: { visual: 90, auditory: 5, physical: 5 },
-    financialMetrics: {
-      capex: 20,
-      attentionYield: 45,
-      retentionMoat: 65,
-      tamRating: "Small",
-      globalTamBillions: 9,
-      archetype: "Deep Focus Moat",
-      thesis: "Financialized digital status signaling and cryptographic provenance anchoring niche community loyalty.",
-      risks: "Severe speculative liquidity volatility, low non-financial utility."
-    }
-  }
+    id: 'vr',
+    name: 'VR & XR',
+    short: 'VR',
+    ticker: 'VRX',
+    family: 'Play',
+    examples: 'Quest games, Beat Saber, VR fitness and social',
+    cognitiveLoad: 60, agency: 80, sensoryBandwidth: 80,
+    senses: { visual: 50, auditory: 30, physical: 20 },
+    supplyCostPerHour: 300_000,
+    supplyCostNote: '$1–5M budgets for roughly ten hours of content.',
+    moat: 50, aiExposure: 45,
+    revenueB: 1.2, revenueYear: 2024,
+    revenueNote: 'Content only: Omdia $0.9B, ARtillery $1.5B.',
+    revenueConfidence: 'Medium',
+    hoursB: 4.6,
+    hoursNote: '21.9M active headsets (Omdia) × ~4 hours/week.',
+    hoursConfidence: 'Low',
+    sources: [{ label: 'AR Insider: VR consumer spending outlook', url: 'https://arinsider.co/2026/02/24/whats-the-consumer-spending-outlook-for-vr/' }],
+    thesis: 'Highest digital immersion, smallest audience: a hardware problem, not a content one.',
+    risks: 'Headset comfort and price; active base shrank in 2024.',
+  },
+  {
+    id: 'tabletop',
+    name: 'Tabletop games',
+    short: 'Tabletop',
+    ticker: 'TBL',
+    family: 'Play',
+    examples: 'Board games, trading card games, tabletop RPGs',
+    cognitiveLoad: 75, agency: 90, sensoryBandwidth: 55,
+    senses: { visual: 40, auditory: 20, physical: 40 },
+    supplyCostPerHour: 3_000,
+    supplyCostNote: 'Design and art for a replayable game; RPG sessions are made by the players.',
+    moat: 55, aiExposure: 25,
+    revenueB: 19.5, revenueYear: 2024,
+    revenueNote: 'Tabletop games incl. RPG and collectible card games (ResearchAndMarkets). Other estimates run $12–20B.',
+    revenueConfidence: 'Low',
+    hoursB: 26,
+    hoursNote: '~500M players × ~1 hour/week.',
+    hoursConfidence: 'Low',
+    sources: [{ label: 'ResearchAndMarkets via BusinessWire: tabletop $19.5B', url: 'https://www.businesswire.com/news/home/20250303837895/en' }],
+    thesis: 'Social, physical and replayable; collectors pay for cardboard many times over.',
+    risks: 'Niche reach; card-game speculation cycles.',
+  },
+  {
+    id: 'betting',
+    name: 'Sports betting',
+    short: 'Betting',
+    ticker: 'BET',
+    family: 'Play',
+    examples: 'Online and retail sportsbooks',
+    cognitiveLoad: 55, agency: 50, sensoryBandwidth: 30,
+    senses: { visual: 80, auditory: 10, physical: 10 },
+    supplyCostPerHour: 10_000,
+    supplyCostNote: 'Odds, risk and tech; the sport itself is produced by the leagues.',
+    moat: 35, aiExposure: 30,
+    revenueB: 70, revenueYear: 2025,
+    revenueNote: 'Gross gaming revenue. Wide range: ~$42B online sportsbook only to ~$106B for all regulated betting (IBIA/H2 projection).',
+    revenueConfidence: 'Low',
+    hoursB: 21,
+    hoursNote: '~400M bettors × ~1 hour/week of active betting.',
+    hoursConfidence: 'Low',
+    sources: [{ label: 'IBIA/H2: $106B betting gross win by 2025', url: 'https://igamingbusiness.com/sports-betting/ibia-and-h2-predict-global-betting-turnover-will-reach-767bn-by-2025/' }],
+    thesis: 'Turns watching into playing; monetises an hour harder than any screen.',
+    risks: 'Regulation and harm; bettors switch freely between books.',
+  },
+
+  /* ── CONVERSE ───────────────────────────────────────── */
+  {
+    id: 'ai_chat',
+    name: 'AI chat & companions',
+    short: 'AI chat',
+    ticker: 'GAI',
+    family: 'Converse',
+    examples: 'ChatGPT, Gemini, Claude, Doubao, Character.ai',
+    cognitiveLoad: 60, agency: 95, sensoryBandwidth: 15,
+    senses: { visual: 80, auditory: 15, physical: 5 },
+    supplyCostPerHour: 1,
+    supplyCostNote: 'First-copy cost is near zero, but unlike other digital media every hour carries real compute cost (~$0.1–1).',
+    moat: 40, aiExposure: 100,
+    revenueB: 18, revenueYear: 2025,
+    revenueNote: 'OpenAI ~$20B revenue with ~70% from consumer subscriptions (~$14B), plus other assistants and companion apps. Excludes API and enterprise.',
+    revenueConfidence: 'Low',
+    hoursB: 45,
+    hoursNote: 'ChatGPT ~800M weekly users × 16 min/day × 12 days/month (Sensor Tower), plus other assistants.',
+    hoursConfidence: 'Low',
+    sources: [
+      { label: 'TechCrunch / Appfigures: ChatGPT mobile spend', url: 'https://techcrunch.com/2025/12/18/chatgpts-mobile-app-hits-new-milestone-of-3b-in-consumer-spending/' },
+      { label: 'TechSpot / Sensor Tower: AI apps >$5B in-app (2025)', url: 'https://www.techspot.com/news/111010-global-app-spending-overtakes-mobile-games-first-time.html' },
+    ],
+    thesis: 'The first medium where agency is the product, and people pay for it by subscription.',
+    risks: 'Compute cost per hour; users switch between near-equal models.',
+  },
+
+  /* ── ATTEND ─────────────────────────────────────────── */
+  {
+    id: 'cinema',
+    name: 'Cinema',
+    short: 'Cinema',
+    ticker: 'CIN',
+    family: 'Attend',
+    examples: 'Theatrical box office',
+    cognitiveLoad: 45, agency: 0, sensoryBandwidth: 78,
+    senses: { visual: 60, auditory: 40, physical: 0 },
+    supplyCostPerHour: 20_000_000,
+    supplyCostNote: 'A wide-release film costs tens of millions per screen-hour; blockbusters ~$100M.',
+    moat: 30, aiExposure: 45,
+    revenueB: 33.5, revenueYear: 2025,
+    revenueNote: 'Box office (Gower Street). Concessions excluded.',
+    revenueConfidence: 'High',
+    hoursB: 11,
+    hoursNote: '4.98B admissions (European Audiovisual Observatory) × 2.2 hours.',
+    hoursConfidence: 'High',
+    sources: [
+      { label: 'Gower Street: $33.5B (2025)', url: 'https://gower.st/articles/tag/ne-zha-2/' },
+      { label: 'European Audiovisual Observatory: 4.98B admissions', url: 'https://www.obs.coe.int/en/web/observatoire/-/asia-drives-global-box-office-growth-while-european-films-hold-strong-locally' },
+    ],
+    thesis: 'An event worth leaving home for, priced ~20× a streaming hour.',
+    risks: 'Shrinking windows; attendance still ~28% below 2017–19.',
+  },
+  {
+    id: 'concerts',
+    name: 'Concerts & festivals',
+    short: 'Concerts',
+    ticker: 'LIV',
+    family: 'Attend',
+    examples: 'Tours, gigs and festivals',
+    cognitiveLoad: 20, agency: 15, sensoryBandwidth: 92,
+    senses: { visual: 25, auditory: 55, physical: 20 },
+    supplyCostPerHour: 200_000,
+    supplyCostNote: 'Artist fee and production per show-hour, blended from club gigs to stadiums.',
+    moat: 70, aiExposure: 10,
+    revenueB: 40, revenueYear: 2025,
+    revenueNote: 'Ticket revenue from concerts and festivals (Omdia).',
+    revenueConfidence: 'Medium',
+    hoursB: 2.5,
+    hoursNote: '~700M attendances × ~3.5 hours (Live Nation alone: 159M fans in 2025).',
+    hoursConfidence: 'Low',
+    sources: [{ label: 'Omdia Live Music Forecast: >$40B (2025)', url: 'https://omdia.tech.informa.com/pr/2026/apr/global-live-music-market-to-exceed-50-billion-dollars-by-2030' }],
+    thesis: 'What recorded music cannot sell: being there. ~800× the price per hour of streaming.',
+    risks: 'Ticketing antitrust; artist and venue capacity limits.',
+  },
+  {
+    id: 'sports_attendance',
+    name: 'Live sports',
+    short: 'Live sports',
+    ticker: 'SPA',
+    family: 'Attend',
+    examples: 'Stadium and arena attendance',
+    cognitiveLoad: 35, agency: 10, sensoryBandwidth: 90,
+    senses: { visual: 45, auditory: 30, physical: 25 },
+    supplyCostPerHour: 5_000_000,
+    supplyCostNote: 'Same match as Sports viewing: a top league wage bill per match-hour.',
+    moat: 90, aiExposure: 5,
+    revenueB: 33, revenueYear: 2024,
+    revenueNote: 'Sports event ticketing (Emergen Research). PwC put gate revenue near $40B a decade ago.',
+    revenueConfidence: 'Low',
+    hoursB: 3.6,
+    hoursNote: '~1.2B attendances × ~3 hours.',
+    hoursConfidence: 'Low',
+    sources: [{ label: 'Emergen Research: sports events tickets $32.8B (2024)', url: 'https://www.emergenresearch.com/industry-report/sports-events-ticket-market' }],
+    thesis: 'Tribal identity in a fixed number of seats: the strongest moat on the map.',
+    risks: 'Pricing out the local fan base that makes the broadcast worth watching.',
+  },
+  {
+    id: 'theatre',
+    name: 'Theatre & performing arts',
+    short: 'Theatre',
+    ticker: 'THR',
+    family: 'Attend',
+    examples: 'Theatre, musicals, opera, dance, orchestras',
+    cognitiveLoad: 65, agency: 5, sensoryBandwidth: 88,
+    senses: { visual: 50, auditory: 45, physical: 5 },
+    supplyCostPerHour: 500_000,
+    supplyCostNote: 'From a regional production (~$100k/hour) to a Broadway musical (~$8M/hour), before the run.',
+    moat: 40, aiExposure: 10,
+    revenueB: 27.5, revenueYear: 2024,
+    revenueNote: 'Performing-arts companies (Reports and Data). Theatrical productions are ~45% of it.',
+    revenueConfidence: 'Low',
+    hoursB: 1.25,
+    hoursNote: '~500M attendances × ~2.5 hours (West End 17.1M and Broadway ~15M a year).',
+    hoursConfidence: 'Low',
+    sources: [{ label: 'Reports and Data: performing art companies $27.5B (2024)', url: 'https://reportsanddata.com/report-detail/performing-art-companies-market' }],
+    thesis: 'The highest price per hour of any story format: live presence cannot be copied.',
+    risks: 'Fixed seats, high fixed costs, ageing audiences outside the big hubs.',
+  },
+  {
+    id: 'theme_parks',
+    name: 'Theme parks',
+    short: 'Theme parks',
+    ticker: 'TPK',
+    family: 'Attend',
+    examples: 'Disney, Universal, Chimelong, regional parks and water parks',
+    cognitiveLoad: 15, agency: 15, sensoryBandwidth: 98,
+    senses: { visual: 30, auditory: 20, physical: 50 },
+    supplyCostPerHour: 125_000_000,
+    supplyCostNote: 'A new themed land (~$1B) delivers about a day (~8 hours) of new experience.',
+    moat: 85, aiExposure: 10,
+    revenueB: 70, revenueYear: 2025,
+    revenueNote: 'Built up from IBISWorld country figures (US $33.3B, China $7.4B, Germany €3.3B) plus Japan and the rest. No global census exists.',
+    revenueConfidence: 'Low',
+    hoursB: 8.4,
+    hoursNote: '~1.4B visits × ~6 hours (top 25 parks alone: 246M visits, TEA).',
+    hoursConfidence: 'Low',
+    sources: [
+      { label: 'IBISWorld: US amusement parks $33.3B (2025)', url: 'https://img.ibisworld.com/united-states/market-research-reports/amusement-parks-industry' },
+      { label: 'TEA Global Experience Index 2024', url: 'https://interpark.co.uk/latest-news/tea-2024-index-releases-visitor-attendance-report/' },
+    ],
+    thesis: 'Capital and IP as a moat: the most expensive hour to build, and the hardest to copy.',
+    risks: 'Decade-long paybacks; tourism cycles.',
+  },
+  {
+    id: 'immersive',
+    name: 'Escape rooms & immersive',
+    short: 'Escape & immersive',
+    ticker: 'ESC',
+    family: 'Attend',
+    examples: 'Escape rooms, immersive theatre and art, LARP',
+    cognitiveLoad: 80, agency: 85, sensoryBandwidth: 95,
+    senses: { visual: 35, auditory: 15, physical: 50 },
+    supplyCostPerHour: 200_000,
+    supplyCostNote: 'An escape room build (~$75k) to an immersive venue (~$50M) per hour of experience.',
+    moat: 20, aiExposure: 20,
+    revenueB: 8, revenueYear: 2024,
+    revenueNote: 'Escape rooms are estimated at $3–11B; immersive venues add more. Low confidence.',
+    revenueConfidence: 'Low',
+    hoursB: 0.23,
+    hoursNote: '~150M visits × ~1.5 hours.',
+    hoursConfidence: 'Low',
+    sources: [{ label: 'Zion Market Research: escape rooms (2024)', url: 'https://www.zionmarketresearch.com/report/escape-room-market' }],
+    thesis: 'Maximum agency and presence at once; people pay for the hour, not the content.',
+    risks: 'No replay value; fragmented operators and rents.',
+  },
 ];
-
-/**
- * Pure Mathematical Pareto Frontier Calculation
- * Identifies the non-dominated assets where no other asset offers higher outputs for <= input cost.
- */
-export function getParetoFrontier(modalities: Modality[], viewMode: 'biological' | 'economic'): Modality[] {
-  interface NodePoint {
-    modality: Modality;
-    x: number;
-    y: number;
-    z: number;
-    compositeScore: number;
-  }
-
-  const data: NodePoint[] = modalities.map(m => {
-    if (viewMode === 'economic') {
-      const x = m.financialMetrics.capex;
-      const y = m.financialMetrics.attentionYield;
-      const z = m.financialMetrics.retentionMoat;
-      return { modality: m, x, y, z, compositeScore: y * 0.55 + z * 0.45 };
-    } else {
-      const x = m.cognitiveLoad;
-      const y = m.systemicAgency;
-      const z = m.sensoryUtilization;
-      return { modality: m, x, y, z, compositeScore: y * 0.5 + z * 0.5 };
-    }
-  });
-
-  // An asset P is Pareto-dominated if there exists Q with Q.x <= P.x AND Q.y >= P.y AND Q.z >= P.z (with at least one strict inequality)
-  const nonDominated = data.filter(p => {
-    const isDominated = data.some(q => 
-      q.modality.id !== p.modality.id &&
-      q.x <= p.x &&
-      q.y >= p.y &&
-      q.z >= p.z &&
-      (q.x < p.x || q.y > p.y || q.z > p.z)
-    );
-    return !isDominated;
-  });
-
-  // Sort ascending by input cost X
-  return nonDominated.sort((a, b) => a.x - b.x).map(n => n.modality);
-}
