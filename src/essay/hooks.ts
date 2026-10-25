@@ -17,7 +17,7 @@ export function useSize<T extends HTMLElement>() {
   return [ref, size] as const;
 }
 
-/** Index of the step currently crossing the middle of the viewport. */
+/** Index of the step currently crossing the middle of the viewport, plus manual step selection. */
 export function useActiveStep(count: number) {
   const refs = useRef<(HTMLElement | null)[]>([]);
   const [active, setActive] = useState(0);
@@ -39,7 +39,12 @@ export function useActiveStep(count: number) {
   const setRef = (i: number) => (el: HTMLElement | null) => {
     refs.current[i] = el;
   };
-  return [active, setRef] as const;
+  const goTo = (i: number) => {
+    setActive(i);
+    const el = refs.current[i];
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+  return [active, setRef, goTo] as const;
 }
 
 /** True once the element has come within `margin` of the viewport. */

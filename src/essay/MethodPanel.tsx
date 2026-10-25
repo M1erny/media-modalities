@@ -40,36 +40,60 @@ export function MethodPanel({ open, onClose }: { open: boolean; onClose: () => v
     <div className="method-backdrop" onClick={onClose}>
       <aside className="method" role="dialog" aria-modal="true" aria-labelledby="method-title" onClick={(e) => e.stopPropagation()}>
         <header className="method-head">
-          <h2 id="method-title">Method &amp; data</h2>
+          <h2 id="method-title">Method, MECE rules &amp; data</h2>
           <button ref={closeRef} className="icon-btn" onClick={onClose} aria-label="Close method and data">
             ✕
           </button>
         </header>
 
         <section>
-          <h3>Scope</h3>
+          <h3>Scope &amp; MECE guarantee</h3>
           <p>
-            Each node is a consumer experience: something a person spends attention on. Revenue is consumer spend plus advertising at the point of the experience,
-            global, in USD, for the latest full year (2024 or 2025). Hardware and internet access are excluded, as are person-to-person messaging, casino and lottery
-            gambling, and education. Each dollar is assigned to one node only. The {D.length} nodes total {fmtMoney(totalRevenueB)} and {fmtHours(totalHoursB)} a year.
+            Each node is a distinct consumer attention experience. Revenue is consumer spend plus advertising at the point of the experience, global, in USD,
+            for the latest full year (2024 or 2025). Device hardware (phones, TVs, consoles, headsets), raw broadband/cellular access and B2B enterprise
+            software are excluded because they are conduits or work tools rather than consumer media experiences. Every consumer media, entertainment, gaming,
+            conversational and venue experience is included, and each dollar and hour is assigned to <b>one node only</b>. Together, the {D.length} nodes total{' '}
+            <b>{fmtMoney(totalRevenueB)}</b> and <b>{fmtHours(totalHoursB)}</b> a year.
           </p>
           <p>
-            Where a carve-out was needed it is stated in the node's note: sports rights move from TV and streaming to Sports viewing (80/20, the split Ampere reports
-            for broadcasters and streamers); audiobooks are taken out of books; YouTube TV and NFL Sunday Ticket are taken out of YouTube.
+            Where multi-service platforms span multiple modalities, explicit carve-outs prevent double-counting:
           </p>
+          <ul className="changes">
+            <li>
+              <b>Live sports broadcasts</b> move from Linear TV and Streaming TV into <b>Sports viewing</b> (80/20 split, matching Ampere’s broadcaster vs
+              streamer sports-rights share), while stadium tickets sit in <b>Live sports attendance</b> and sportsbooks/iGaming sit in{' '}
+              <b>Betting, iGaming &amp; lotteries</b>.
+            </li>
+            <li>
+              <b>Alphabet / YouTube</b> is split cleanly across three nodes: core creator video, Shorts and YouTube Premium sit in <b>YouTube</b>; YouTube TV
+              bundles sit in <b>Linear &amp; pay TV</b>; YouTube Music sits in <b>Recorded music</b>.
+            </li>
+            <li>
+              <b>Meta &amp; social platforms</b>: public algorithmic feeds (Instagram, Facebook, X, Reddit, LinkedIn, Pinterest) sit in <b>Social networks</b>;
+              WhatsApp, Discord, Telegram and WeChat 1-on-1/group chats sit in <b>Messaging &amp; communities</b>; standalone vertical video apps (TikTok,
+              Douyin, Kuaishou) sit in <b>Short-video apps</b>.
+            </li>
+            <li>
+              <b>Book publishing &amp; reading</b>: narrated audio editions are carved out into <b>Audiobooks &amp; audio drama</b>; manga, graphic novels and
+              webtoons sit in <b>Comics, manga &amp; webtoons</b>; daily word/logic puzzles (Wordle, NYT Games, Chess.com, Duolingo) sit in{' '}
+              <b>Gamified learning &amp; daily puzzles</b>.
+            </li>
+          </ul>
           <p>
-            Hours are estimates of global annual attention, built from time-use panels (GWI via DataReportal), platform figures and attendance counts. Most are
-            order-of-magnitude estimates and are graded Low. Revenue per hour is revenue divided by hours.
+            Hours are estimates of global annual attention built from time-use panels (GWI via DataReportal), platform disclosures and venue attendance counts.
+            Revenue per hour is annual revenue divided by annual hours.
           </p>
         </section>
 
         <section>
-          <h3>Families: an ordered decision tree</h3>
-          <p>The first question that answers yes assigns the family, so every experience lands in exactly one.</p>
+          <h3>Families: an ordered 6-gate decision tree</h3>
+          <p>The first question that answers “Yes” claims the experience, guaranteeing that the six families are mutually exclusive and collectively exhaustive.</p>
           <ol className="tree">
-            {FAMILY_ORDER.map((f) => (
+            {FAMILY_ORDER.map((f, i) => (
               <li key={f}>
-                <span className="tree-q">{FAMILY_CONFIG[f].rule}</span>
+                <span className="tree-q">
+                  <b>Gate {i + 1}.</b> {FAMILY_CONFIG[f].rule}
+                </span>
                 <span className="tree-a" style={{ ['--c' as string]: MODE_CONFIG[FAMILY_CONFIG[f].mode].color }}>
                   {f}
                 </span>
@@ -80,8 +104,8 @@ export function MethodPanel({ open, onClose }: { open: boolean; onClose: () => v
         </section>
 
         <section>
-          <h3>Rubrics</h3>
-          <p>Every 0–100 score is set against written anchors, so any score can be challenged by pointing at one.</p>
+          <h3>Rubrics (0–100 anchored scales)</h3>
+          <p>Every 0–100 score is set against five written anchors so any score can be audited or adjusted in the 3D explorer.</p>
           <div className="rubrics">
             {RUBRICS.map((r) => (
               <div key={r.key} className="rubric">
@@ -105,7 +129,7 @@ export function MethodPanel({ open, onClose }: { open: boolean; onClose: () => v
 
         <section>
           <h3>Business models</h3>
-          <p>Assigned from position, not by hand. The price cut is the median revenue per hour, currently {fmtPrice(med)}.</p>
+          <p>Assigned automatically from position on the Supply Cost × Revenue/Hour plane. The price cut is the median revenue per hour ({fmtPrice(med)}).</p>
           <dl className="defs">
             {ARCHETYPE_ORDER.map((a) => (
               <div key={a}>
@@ -115,21 +139,20 @@ export function MethodPanel({ open, onClose }: { open: boolean; onClose: () => v
             ))}
           </dl>
           <p>
-            The efficient frontier is the set of experiences that no other beats on both supply cost and revenue per hour. The biological lens has no better or worse
-            direction, so it has no frontier.
+            The <b>efficient frontier</b> is the Pareto set of experiences that no other experience beats on both lower supply cost and higher revenue per hour.
           </p>
         </section>
 
         <section>
           <h3>2030 AI scenario</h3>
           <p>
-            Supply cost in 2030 = today's cost ÷ 10^({AI_COST_DECADES_AT_FULL_EXPOSURE} × AI exposure). An exposure of 50 makes an hour 10× cheaper to make, 100 makes it
-            100× cheaper, 10 about 1.6×. It is an assumption to make the direction visible, not a forecast.
+            Supply cost in 2030 = today’s cost ÷ 10^({AI_COST_DECADES_AT_FULL_EXPOSURE} × AI exposure). An exposure of 50 makes an hour 10× cheaper to make, 100
+            makes it 100× cheaper, 10 about 1.6×. It is a structural sensitivity test to make the direction visible, not a point forecast.
           </p>
         </section>
 
         <section>
-          <h3>All 28 experiences</h3>
+          <h3>All {D.length} MECE experiences</h3>
           <div className="table-wrap">
             <table className="data-table">
               <thead>
@@ -140,7 +163,7 @@ export function MethodPanel({ open, onClose }: { open: boolean; onClose: () => v
                   {th('price', '$/hour')}
                   {th('cost', 'Supply $/h')}
                   <th scope="col">Model</th>
-                  <th scope="col">Notes &amp; sources</th>
+                  <th scope="col">MECE boundary &amp; sources</th>
                 </tr>
               </thead>
               <tbody>
@@ -166,15 +189,21 @@ export function MethodPanel({ open, onClose }: { open: boolean; onClose: () => v
                     <td>{archetypeOf(m, med)}</td>
                     <td className="notes">
                       <details>
-                        <summary>{m.revenueYear} · details</summary>
+                        <summary>{m.revenueYear} · boundary &amp; notes</summary>
                         <p>
-                          <b>Revenue.</b> {m.revenueNote}
+                          <b>Included:</b> {m.includes}
                         </p>
                         <p>
-                          <b>Hours.</b> {m.hoursNote}
+                          <b>Carved out:</b> {m.excludes}
                         </p>
                         <p>
-                          <b>Supply cost.</b> {m.supplyCostNote}
+                          <b>Revenue:</b> {m.revenueNote}
+                        </p>
+                        <p>
+                          <b>Hours:</b> {m.hoursNote}
+                        </p>
+                        <p>
+                          <b>Supply cost:</b> {m.supplyCostNote}
                         </p>
                         <ul>
                           {m.sources.map((s) => (
@@ -192,21 +221,6 @@ export function MethodPanel({ open, onClose }: { open: boolean; onClose: () => v
               </tbody>
             </table>
           </div>
-        </section>
-
-        <section>
-          <h3>What changed from the first version</h3>
-          <ul className="changes">
-            <li>Nodes are now consumer experiences only. Generative AI became AI chat; VR, voice assistants and digital collectibles were folded in or dropped.</li>
-            <li>Families are assigned by one decision tree instead of three overlapping criteria.</li>
-            <li>
-              Extraction yield was split into hours and revenue per hour, both measured. CapEx became supply cost per hour; its barrier-to-entry meaning moved into platform
-              moat.
-            </li>
-            <li>Added mobile games, music, radio, audiobooks, YouTube, linear TV, sports (viewing, attendance and betting), newsletters, concerts and cinema.</li>
-            <li>Every revenue figure now has a source; bubble area is proportional to revenue.</li>
-            <li>Composite averages were removed; archetypes are derived from position.</li>
-          </ul>
         </section>
       </aside>
     </div>

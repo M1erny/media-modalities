@@ -1,44 +1,78 @@
-/**
- * Headline numbers used in the essay copy, computed from the data so the text
- * cannot drift from the charts.
- */
-import { modalitiesData as D } from './modalities';
-import { correlate, economicFrontier, medianPrice, pricePerHour } from './derive';
-import { FAMILY_ORDER, type Family } from './taxonomy';
+import { modalitiesData as D, type Modality } from './modalities';
+import { pricePerHour } from './derive';
+import { FAMILY_CONFIG, FAMILY_ORDER, MODE_ORDER, type Family, type Mode } from './taxonomy';
 
-const sum = (xs: number[]) => xs.reduce((s, v) => s + v, 0);
-const byId = (id: string) => D.find((m) => m.id === id)!;
+export const totalRevenueB = D.reduce((s, m) => s + m.revenueB, 0);
+export const totalHoursB = D.reduce((s, m) => s + m.hoursB, 0);
+export const avgPricePerHour = totalRevenueB / totalHoursB;
 
-export const totalRevenueB = sum(D.map((m) => m.revenueB));
-export const totalHoursB = sum(D.map((m) => m.hoursB));
-export const hoursPerPersonPerDay = (totalHoursB * 1e9) / 8.2e9 / 365;
+export const familyNodes = (f: Family) => D.filter((m) => m.family === f);
+export const familyCount = (f: Family) => familyNodes(f).length;
+export const familyRevenue = (f: Family) => D.filter((m) => m.family === f).reduce((s, m) => s + m.revenueB, 0);
+export const familyHours = (f: Family) => D.filter((m) => m.family === f).reduce((s, m) => s + m.hoursB, 0);
+export const familyShare = (f: Family, metric: 'revenue' | 'hours') =>
+  metric === 'revenue' ? familyRevenue(f) / totalRevenueB : familyHours(f) / totalHoursB;
+export const familyAvgPrice = (f: Family) => familyRevenue(f) / Math.max(0.001, familyHours(f));
 
-const prices = D.map(pricePerHour);
-export const priceSpread = Math.max(...prices) / Math.min(...prices);
-export const medianPricePerHour = medianPrice(D);
+export const modeNodes = (mode: Mode) => D.filter((m) => FAMILY_CONFIG[m.family].mode === mode);
+export const modeCount = (mode: Mode) => modeNodes(mode).length;
+export const modeRevenue = (mode: Mode) =>
+  D.filter((m) => FAMILY_CONFIG[m.family].mode === mode).reduce((s, m) => s + m.revenueB, 0);
+export const modeHours = (mode: Mode) =>
+  D.filter((m) => FAMILY_CONFIG[m.family].mode === mode).reduce((s, m) => s + m.hoursB, 0);
+export const modeShare = (mode: Mode, metric: 'revenue' | 'hours') =>
+  metric === 'revenue' ? modeRevenue(mode) / totalRevenueB : modeHours(mode) / totalHoursB;
+export const modeAvgPrice = (mode: Mode) => modeRevenue(mode) / Math.max(0.001, modeHours(mode));
 
-export const familyTotals = FAMILY_ORDER.map((family: Family) => {
-  const items = D.filter((m) => m.family === family);
-  const revenueB = sum(items.map((m) => m.revenueB));
-  const hoursB = sum(items.map((m) => m.hoursB));
-  return { family, revenueB, hoursB, price: revenueB / hoursB, revenueShare: revenueB / totalRevenueB, hoursShare: hoursB / totalHoursB };
-});
-export const family = (f: Family) => familyTotals.find((t) => t.family === f)!;
+export const FAMILY_SUMMARY = FAMILY_ORDER.map((f) => ({
+  family: f,
+  mode: FAMILY_CONFIG[f].mode,
+  color: FAMILY_CONFIG[f].color,
+  rule: FAMILY_CONFIG[f].rule,
+  description: FAMILY_CONFIG[f].description,
+  scope: FAMILY_CONFIG[f].scope,
+  count: familyCount(f),
+  revenueB: familyRevenue(f),
+  hoursB: familyHours(f),
+  revShare: familyShare(f, 'revenue'),
+  hoursShare: familyShare(f, 'hours'),
+  avgPrice: familyAvgPrice(f),
+  nodes: familyNodes(f),
+}));
 
-export const rel = {
-  hoursPrice: correlate(D, 'hours', 'price').rho,
-  cogHours: correlate(D, 'cog', 'hours').rho,
-  cogPrice: correlate(D, 'cog', 'price').rho,
-  cogRevenue: correlate(D, 'cog', 'revenue').rho,
-  sensCost: correlate(D, 'sens', 'cost').rho,
-  sensPrice: correlate(D, 'sens', 'price').rho,
-  agencyPrice: correlate(D, 'agency', 'price').rho,
-  agencyMoat: correlate(D, 'agency', 'moat').rho,
-  moatPrice: correlate(D, 'moat', 'price').rho,
-  moatRevenue: correlate(D, 'moat', 'revenue').rho,
-};
+export const MODE_SUMMARY = MODE_ORDER.map((m) => ({
+  mode: m,
+  count: modeCount(m),
+  revenueB: modeRevenue(m),
+  hoursB: modeHours(m),
+  revShare: modeShare(m, 'revenue'),
+  hoursShare: modeShare(m, 'hours'),
+  avgPrice: modeAvgPrice(m),
+}));
 
-export const frontierIds = economicFrontier(D);
-export const lowConfidenceHours = D.filter((m) => m.hoursConfidence === 'Low').length;
-export const nodeCount = D.length;
-export { byId };
+export const byPriceDesc = [...D].sort((a, b) => pricePerHour(b) - pricePerHour(a));
+export const priciest = byPriceDesc[0];
+export const cheapest = byPriceDesc[byPriceDesc.length - 1];
+export const priceSpread = Math.round(pricePerHour(priciest) / pricePerHour(cheapest));
+
+export const isoRevenueLines = [1, 10, 100]; // $B
+
+/** Ordinary least squares line + Pearson r on pre-extracted (x, y) pairs. */
+export function olsLine(pts: { x: number; y: number }[]) {
+  const n = pts.length;
+  const mx = pts.reduce((s, p) => s + p.x, 0) / n;
+  const my = pts.reduce((s, p) => s + p.y, 0) / n;
+  let num = 0, dx = 0, dy = 0;
+  for (const p of pts) {
+    num += (p.x - mx) * (p.y - my);
+    dx += (p.x - mx) ** 2;
+    dy += (p.y - my) ** 2;
+  }
+  const slope = num / (dx || 1);
+  const intercept = my - slope * mx;
+  const r = num / (Math.sqrt(dx * dy) || 1);
+  return { slope, intercept, r, at: (x: number) => intercept + slope * x };
+}
+
+export const byId = new Map<string, Modality>(D.map((m) => [m.id, m]));
+export { FAMILY_ORDER, MODE_ORDER };

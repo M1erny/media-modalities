@@ -1,76 +1,35 @@
 # Media Modalities
 
-A map of the global attention economy: 28 media and entertainment experiences, what each hour of attention earns, what an hour costs to make, and where AI is about to move it.
+An interactive scrollytelling essay and 3D explorer mapping **what an hour of human attention is worth** across **32 Mutually Exclusive, Collectively Exhaustive (MECE) consumer experiences** (~$1.67T in annual consumer & advertising spend and ~8.5T annual person-hours).
 
-It is told as a scrolling essay of flat charts and ends in a 3D explorer where every claim can be checked.
+## MECE Architecture: 3 Modes → 6 Families → 32 Experiences
 
-## What's in it
+Every experience passes through an **ordered 6-gate waterfall decision tree** where the first question that answers **"Yes"** claims the experience. Explicit carve-outs (`includes` / `excludes` on every node) ensure zero double-counting of dollars or hours:
 
-**The essay** (five chapters, then the 3D explorer)
+1. **Gate 1 — `Attend` (`Out-of-home` · 7 nodes):** *Do you have to be physically at a venue or event?*
+   - Cinema · Live music, festivals & clubs · Live sports attendance · Theatre, comedy & performing arts · Theme & water parks · Museums, zoos & cultural sites · Escape rooms & immersive
+2. **Gate 2 — `Play` (`Lean-forward` · 7 nodes):** *Do you act inside a rule-based system with state, score or stakes?*
+   - Mobile games · Console games · PC games · VR & spatial games · Board, card & tabletop · Gamified learning & daily puzzles · Betting, iGaming & lotteries
+3. **Gate 3 — `Converse` (`Lean-forward` · 3 nodes):** *Is the experience generated in reciprocal dialogue with people or AI?*
+   - Messaging & communities · Dating & social discovery · AI chat & companions
+4. **Gate 4 — `Watch` (`Lean-back` · 7 nodes):** *Is it moving images or a visual algorithmic feed?*
+   - Short-video apps · Social networks · YouTube · Live creator streaming · Streaming TV & film · Linear & pay TV · Sports viewing
+5. **Gate 5 — `Listen` (`Lean-back` · 4 nodes):** *Is it primarily sound and spoken word?*
+   - Recorded music · Broadcast & satellite radio · Podcasts · Audiobooks & audio drama
+6. **Gate 6 — `Read` (`Lean-back` · 4 nodes):** *Otherwise: static text and still-image publications.*
+   - Books (print, e-books & web novels) · News & consumer magazines · Newsletters & independent writing · Comics, manga & webtoons
 
-1. **Where the money is.** A treemap of $1.68T a year by family and experience, which then re-sizes by hours.
-2. **An hour is not an hour.** Hours of attention against revenue per hour, on log scales with equal-revenue diagonals. Live experiences earn up to ~1,700× more per hour than background audio.
-3. **Four business models.** Supply cost against revenue per hour. Archetypes (volume engines, scale bets, premium experiences, margin niches) and the efficient frontier are derived from position.
-4. **What the biology predicts.** The biological scores against the measured economics, with Spearman correlations.
-5. **Where AI moves it.** A 2030 scenario in which AI cuts the cost of making a digital hour while physical experiences stay put.
-6. **Explore it yourself.** The 3D explorer, with both lenses, colour by mode, family or sensory mix, a sortable list, per-node sources, and score sliders.
+## Key Features
 
-**Method & data** opens from the top bar. It has the scope, the decision tree, the rubrics, the archetype rules, the AI scenario rule, and a table of all 28 experiences with notes, sources and confidence grades.
+- **Executive Summary & Interactive MECE Explorer:** Upfront 5 Core Laws strip, 3-Mode summary cards, 6-Family waterfall cards with dual Money vs. Time bars, and an interactive **MECE Boundary & Node Spotlight** showing each node's exact `Includes` and `Excludes` carve-outs.
+- **5 Scrollytelling Chapters with Instant Step Switchers:** Flip between views either by scrolling or by clicking step tabs directly above each sticky chart.
+- **Complete Reference Matrix (Cheat Sheet):** Search, filter (by Mode, Family, or Business Model Archetype), and sort all 32 experiences side by side.
+- **3D Six-Dimensional Explorer:** Switch between the **Economic cube** (`Supply cost × Revenue/hour × Platform moat`) and the **Biological cube** (`Cognitive load × Agency × Sensory bandwidth`), with vertical floor stems, wall projections, live 3D axis guides, one-click Mode/Family/Frontier isolation, and live rubric sliders.
 
-## The model
-
-**Unit of analysis.** Every node is a consumer experience. Technologies such as AI, VR headsets and voice are not nodes unless they are the experience itself.
-
-**Families** come from an ordered decision tree, so each experience lands in exactly one:
-
-| # | Question | Family | Mode |
-|---|---|---|---|
-| 1 | Do you have to be at a venue or event? | Attend | Out-of-home |
-| 2 | Do you act inside a rule-based system that responds to you? | Play | Lean-forward |
-| 3 | Is the content generated in dialogue with you? | Converse | Lean-forward |
-| 4 | Is it mainly moving images? | Watch | Lean-back |
-| 5 | Is it mainly sound? | Listen | Lean-back |
-| 6 | Otherwise: static text and images | Read | Lean-back |
-
-**Two lenses.**
-
-| | X | Y | Z |
-|---|---|---|---|
-| **Biological** | Cognitive load | Agency | Sensory bandwidth |
-| **Economic** | Supply cost ($ to make one hour, log) | Revenue per hour (log) | Platform moat |
-
-**Measured vs scored.** Revenue is sourced for every node (consumer spend plus advertising, global, latest full year, with hardware and internet access excluded). Hours are estimates from time-use panels, platform figures and attendance counts, and each one carries a confidence grade. Scores (cognitive load, agency, sensory bandwidth, moat, AI exposure) follow anchored rubrics in [`src/data/rubrics.ts`](src/data/rubrics.ts).
-
-## What the data says
-
-| Relationship | Spearman ρ |
-|---|---|
-| Hours vs revenue per hour | −0.83 |
-| Cognitive load vs hours | −0.43 |
-| Cognitive load vs revenue per hour | +0.45 |
-| Sensory bandwidth vs supply cost | +0.70 |
-| Sensory bandwidth vs revenue per hour | +0.45 |
-| Agency vs revenue per hour | +0.06 |
-
-Low friction wins hours, not price. Immersion is expensive and is priced. Agency isn't priced yet. The first version of the model found that low friction meant high "yield" (r = −0.61). That finding came from mixing volume with price, and it turns over once the two are measured separately.
-
-## Code
-
-| Path | What it holds |
-|---|---|
-| [`src/data/modalities.ts`](src/data/modalities.ts) | All 28 experiences: scores, revenue, hours, notes, sources |
-| [`src/data/taxonomy.ts`](src/data/taxonomy.ts) | Families, modes, decision tree |
-| [`src/data/rubrics.ts`](src/data/rubrics.ts) | Anchored scoring rubrics and the AI scenario rule |
-| [`src/data/derive.ts`](src/data/derive.ts) | Revenue per hour, cost scores, archetypes, frontier, statistics |
-| [`src/essay/`](src/essay) | The scrolling essay and its SVG charts |
-| [`src/explorer/`](src/explorer) | The 3D explorer (three.js, lazy-loaded) |
-
-## Run it
+## Development
 
 ```bash
 npm install
-npm run dev       # local dev server
-npm run build     # type-check and production build
+npm run dev
+npm run build
 ```
-
-Built with React, TypeScript, Vite and Three.js (via `@react-three/fiber` and `drei`). The essay charts are hand-rolled SVG with no chart library. The 3D explorer loads only when it is needed.

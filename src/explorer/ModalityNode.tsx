@@ -13,6 +13,7 @@ interface Props {
   lens: Lens;
   isSelected: boolean;
   isFrontier: boolean;
+  isDimmed?: boolean;
   onSelect: (id: string | null) => void;
   preview?: boolean;
 }
@@ -20,9 +21,10 @@ interface Props {
 const noRaycast = () => null;
 const tmp = new THREE.Vector3();
 
-/** One experience: a sphere at its lens position, its shadow on the floor, and (when inspected) on both back walls. */
-export function ModalityNode({ modality: m, position, radius, color, lens, isSelected, isFrontier, onSelect, preview }: Props) {
+/** One experience: a sphere at its lens position, a vertical stem to the floor, its shadow on the floor, and (when inspected) on both back walls. */
+export function ModalityNode({ modality: m, position, radius, color, lens, isSelected, isFrontier, isDimmed = false, onSelect, preview }: Props) {
   const group = useRef<THREE.Group>(null);
+  const stem = useRef<THREE.Mesh>(null);
   const floor = useRef<THREE.Mesh>(null);
   const wallXY = useRef<THREE.Mesh>(null);
   const wallZY = useRef<THREE.Mesh>(null);
@@ -35,17 +37,24 @@ export function ModalityNode({ modality: m, position, radius, color, lens, isSel
     if (!g) return;
     tmp.set(...position);
     g.position.lerp(tmp, Math.min(1, delta * 5));
-    const target = isSelected ? 1.35 : hovered ? 1.2 : 1;
+    const target = isSelected ? 1.35 : hovered ? 1.2 : isDimmed ? 0.82 : 1;
     scale.current = THREE.MathUtils.lerp(scale.current, target, Math.min(1, delta * 8));
     g.scale.setScalar(scale.current);
     const { x, y, z } = g.position;
     floor.current?.position.set(x, 0.05, z);
+    if (stem.current) {
+      stem.current.position.set(x, y / 2, z);
+      stem.current.scale.set(1, Math.max(0.01, y), 1);
+    }
     wallXY.current?.position.set(x, y, 0.05);
     wallZY.current?.position.set(0.05, y, z);
     if (halo.current) halo.current.rotation.z += delta * 0.6;
   });
 
-  const shadowOpacity = isSelected ? 0.55 : hovered ? 0.4 : 0.14;
+  const shadowOpacity = isDimmed ? 0.04 : isSelected ? 0.6 : hovered ? 0.45 : 0.18;
+  const stemOpacity = isDimmed ? 0.04 : isSelected ? 0.55 : hovered ? 0.42 : 0.16;
+  const sphereOpacity = isDimmed ? 0.18 : 1;
+
   const lensRows =
     lens === 'economic'
       ? [
@@ -60,6 +69,10 @@ export function ModalityNode({ modality: m, position, radius, color, lens, isSel
 
   return (
     <>
+      <mesh ref={stem} raycast={noRaycast}>
+        <cylinderGeometry args={[isSelected || hovered ? 0.14 : 0.07, isSelected || hovered ? 0.14 : 0.07, 1, 6]} />
+        <meshBasicMaterial color={color} transparent opacity={stemOpacity} depthWrite={false} />
+      </mesh>
       <mesh ref={floor} rotation={[-Math.PI / 2, 0, 0]} raycast={noRaycast}>
         <circleGeometry args={[radius * 0.8, 24]} />
         <meshBasicMaterial color={color} transparent opacity={shadowOpacity} depthWrite={false} />
@@ -101,7 +114,15 @@ export function ModalityNode({ modality: m, position, radius, color, lens, isSel
 
         <mesh raycast={noRaycast}>
           <sphereGeometry args={[radius, 32, 24]} />
-          <meshStandardMaterial color={color} emissive={color} emissiveIntensity={isSelected ? 0.8 : hovered ? 0.55 : 0.25} roughness={0.35} metalness={0.05} />
+          <meshStandardMaterial
+            color={color}
+            emissive={color}
+            emissiveIntensity={isSelected ? 0.8 : hovered ? 0.55 : isDimmed ? 0.06 : 0.25}
+            roughness={0.35}
+            metalness={0.05}
+            transparent={isDimmed}
+            opacity={sphereOpacity}
+          />
         </mesh>
 
         {isSelected && (
@@ -110,16 +131,18 @@ export function ModalityNode({ modality: m, position, radius, color, lens, isSel
             <meshBasicMaterial color="#eef0f4" />
           </mesh>
         )}
-        {isFrontier && !isSelected && (
+        {isFrontier && !isSelected && !isDimmed && (
           <mesh ref={halo} raycast={noRaycast}>
             <torusGeometry args={[radius * 1.4, 0.08, 8, 48]} />
             <meshBasicMaterial color="#a99bff" transparent opacity={0.85} />
           </mesh>
         )}
 
-        <Html center zIndexRange={[20, 0]} style={{ pointerEvents: 'none' }} position={[0, radius + 2.2, 0]}>
-          <div className={`node-label${hovered || isSelected ? ' on' : ''}${preview ? ' preview' : ''}`}>{m.short}</div>
-        </Html>
+        {!isDimmed && (
+          <Html center zIndexRange={[20, 0]} style={{ pointerEvents: 'none' }} position={[0, radius + 2.2, 0]}>
+            <div className={`node-label${hovered || isSelected ? ' on' : ''}${preview ? ' preview' : ''}`}>{m.short}</div>
+          </Html>
+        )}
 
         {hovered && !isSelected && !preview && (
           <Html zIndexRange={[60, 40]} style={{ pointerEvents: 'none' }} position={[radius + 2, 0, 0]}>

@@ -14,9 +14,12 @@ import {
   supplyCost,
   type Lens,
 } from '../data/derive';
-import { FAMILY_CONFIG, FAMILY_ORDER, MODE_CONFIG, MODE_ORDER, type Family } from '../data/taxonomy';
+import { FAMILY_CONFIG, FAMILY_ORDER, MODE_CONFIG, MODE_ORDER, type Family, type Mode } from '../data/taxonomy';
 import { modalitiesData } from '../data/modalities';
 import { nodeColor, type CameraPreset, type ColorMode } from './colors';
+import { AXIS_STYLE } from './Scene';
+
+export type FilterState = 'All' | 'Frontier' | Mode | Family;
 
 interface Props {
   lens: Lens;
@@ -25,6 +28,8 @@ interface Props {
   setColorMode: (c: ColorMode) => void;
   cameraPreset: CameraPreset;
   setCameraPreset: (p: CameraPreset) => void;
+  filter: FilterState;
+  setFilter: (f: FilterState) => void;
   tour: boolean;
   setTour: (on: boolean) => void;
   modalities: Modality[];
@@ -70,6 +75,7 @@ const SLIDERS: { key: keyof Modality; label: string }[] = [
 export function Hud(p: Props) {
   const [listOpen, setListOpen] = useState(false);
   const selected = p.modalities.find((m) => m.id === p.selectedId) ?? null;
+  const axes = AXIS_STYLE[p.lens];
 
   if (p.tour) {
     return (
@@ -92,14 +98,23 @@ export function Hud(p: Props) {
           )}
           <span className="hud-title">Media Modalities · 3D</span>
         </div>
-        <div className="hud-group" role="group" aria-label="Lens">
+        <div className="hud-group" role="group" aria-label="Lens and colour">
           <Seg value={p.lens} set={p.setLens} options={[['economic', 'Economic'], ['biological', 'Biological']]} />
           <Seg value={p.colorMode} set={p.setColorMode} options={[['mode', 'Mode'], ['family', 'Family'], ['senses', 'Senses']]} />
         </div>
         <div className="hud-group" role="group" aria-label="Camera">
-          <Seg value={p.cameraPreset} set={p.setCameraPreset} options={[['isometric', '3D'], ['xy', 'Front'], ['zy', 'Side'], ['xz', 'Top']]} />
+          <Seg
+            value={p.cameraPreset}
+            set={p.setCameraPreset}
+            options={[
+              ['isometric', '3D Cube'],
+              ['xy', 'Front (X×Y)'],
+              ['zy', 'Side (Z×Y)'],
+              ['xz', 'Top (X×Z)'],
+            ]}
+          />
           <button className="hud-btn" onClick={() => p.setTour(true)}>
-            Tour
+            Orbit
           </button>
         </div>
         <div className="hud-group">
@@ -114,9 +129,37 @@ export function Hud(p: Props) {
         </div>
       </div>
 
+      {/* Live 3D Axis Guide + Quick Isolate Filter Bar */}
+      <div className="hud-subbar">
+        <div className="hud-axes-pill" aria-label="Active 3D axes">
+          <span>
+            <b>{axes.x[0]}:</b> {axes.x[1]}
+          </span>
+          <span>
+            <b>{axes.y[0]}:</b> {axes.y[1]}
+          </span>
+          <span>
+            <b>{axes.z[0]}:</b> {axes.z[1]}
+          </span>
+        </div>
+        <div className="hud-filter-pill" role="group" aria-label="Isolate in 3D">
+          <span className="hud-filter-label">Isolate:</span>
+          {(['All', 'Frontier', ...MODE_ORDER, ...FAMILY_ORDER] as const).map((f) => (
+            <button
+              key={f}
+              type="button"
+              className={`hud-chip${p.filter === f ? ' active' : ''}`}
+              onClick={() => p.setFilter(p.filter === f ? 'All' : f)}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="hud-bottom">
-        {selected ? <Inspector m={selected} {...p} /> : <div className="hud-hint">Click any node for its numbers, sources and scores.</div>}
-        <Legend lens={p.lens} colorMode={p.colorMode} />
+        {selected ? <Inspector m={selected} {...p} /> : <div className="hud-hint">Click any sphere for its numbers, MECE boundary, sources and score sliders.</div>}
+        <Legend lens={p.lens} colorMode={p.colorMode} filter={p.filter} setFilter={p.setFilter} />
       </div>
 
       {listOpen && <List {...p} onClose={() => setListOpen(false)} />}
@@ -217,6 +260,16 @@ function Inspector({ m, lens, modalities, onSelect, onUpdate, onReset }: { m: Mo
         </div>
 
         <p className="insp-thesis">{m.thesis}</p>
+
+        <div className="insp-boundary">
+          <div>
+            <b>✓ Included:</b> {m.includes}
+          </div>
+          <div>
+            <b>⇄ Carved out:</b> {m.excludes}
+          </div>
+        </div>
+
         <p className="insp-risk">
           <b>Risk.</b> {m.risks}
         </p>
@@ -270,22 +323,32 @@ function Inspector({ m, lens, modalities, onSelect, onUpdate, onReset }: { m: Mo
   );
 }
 
-function Legend({ lens, colorMode }: { lens: Lens; colorMode: ColorMode }) {
+function Legend({
+  lens,
+  colorMode,
+  filter,
+  setFilter,
+}: {
+  lens: Lens;
+  colorMode: ColorMode;
+  filter: FilterState;
+  setFilter: (f: FilterState) => void;
+}) {
   return (
     <div className="legend-card">
       {colorMode === 'mode' &&
         MODE_ORDER.map((m) => (
-          <span key={m}>
+          <button key={m} type="button" className={`legend-btn${filter === m ? ' active' : ''}`} onClick={() => setFilter(filter === m ? 'All' : m)}>
             <i style={{ background: MODE_CONFIG[m].color }} />
             {m}
-          </span>
+          </button>
         ))}
       {colorMode === 'family' &&
         FAMILY_ORDER.map((f) => (
-          <span key={f}>
+          <button key={f} type="button" className={`legend-btn${filter === f ? ' active' : ''}`} onClick={() => setFilter(filter === f ? 'All' : f)}>
             <i style={{ background: FAMILY_CONFIG[f].color }} />
             {f}
-          </span>
+          </button>
         ))}
       {colorMode === 'senses' && (
         <>
@@ -303,12 +366,16 @@ function Legend({ lens, colorMode }: { lens: Lens; colorMode: ColorMode }) {
           </span>
         </>
       )}
-      <span className="legend-note">Area ∝ revenue · hover a node to see its shadow on each wall</span>
+      <span className="legend-note">Area ∝ revenue · stem = height (Y) · hover for wall projections</span>
       {lens === 'economic' && (
-        <span className="legend-note">
+        <button
+          type="button"
+          className={`legend-btn${filter === 'Frontier' ? ' active' : ''}`}
+          onClick={() => setFilter(filter === 'Frontier' ? 'All' : 'Frontier')}
+        >
           <i className="ring-key" />
           Efficient frontier
-        </span>
+        </button>
       )}
     </div>
   );
@@ -330,7 +397,7 @@ function List({ lens, modalities, selectedId, onSelect, colorMode, onResetAll, o
   return (
     <aside className="list-drawer" aria-label="All experiences">
       <div className="list-head">
-        <h2>All experiences</h2>
+        <h2>All {modalities.length} experiences</h2>
         <button className="icon-btn" onClick={onClose} aria-label="Close list">
           ✕
         </button>

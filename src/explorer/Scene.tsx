@@ -14,6 +14,7 @@ interface SceneProps {
   colorMode: ColorMode;
   modalities: Modality[];
   selectedId: string | null;
+  activeIds?: Set<string> | null;
   onSelect: (id: string | null) => void;
   cameraPreset: CameraPreset;
   autoRotate: boolean;
@@ -80,9 +81,17 @@ function CameraController({ preset, focus, autoRotate, preview }: { preset: Came
   );
 }
 
-const AXIS_STYLE = {
-  biological: { x: ['Cognitive load', 'effortless → effortful'], y: ['Agency', 'fixed → co-created'], z: ['Sensory bandwidth', 'text → physical'] },
-  economic: { x: ['Supply cost', '$100 → $100M per hour'], y: ['Revenue per hour', '1¢ → $100'], z: ['Platform moat', 'none → social graph'] },
+export const AXIS_STYLE = {
+  biological: {
+    x: ['X · Cognitive load', 'effortless → effortful'],
+    y: ['Y · Agency', 'fixed → co-created'],
+    z: ['Z · Sensory bandwidth', 'text → physical'],
+  },
+  economic: {
+    x: ['X · Supply cost', '$100 → $100M per hour'],
+    y: ['Y · Revenue per hour', '1¢ → $100'],
+    z: ['Z · Platform moat', 'none → social graph'],
+  },
 } as const;
 
 function Axes({ lens }: { lens: Lens }) {
@@ -132,7 +141,7 @@ function Walls() {
   );
 }
 
-export function Scene({ lens, colorMode, modalities, selectedId, onSelect, cameraPreset, autoRotate, preview }: SceneProps) {
+export function Scene({ lens, colorMode, modalities, selectedId, activeIds, onSelect, cameraPreset, autoRotate, preview }: SceneProps) {
   const frontier = useMemo(() => (lens === 'economic' ? economicFrontier(modalities) : new Set<string>()), [lens, modalities]);
   const maxRevenue = useMemo(() => Math.max(...modalities.map((m) => m.revenueB)), [modalities]);
   const selected = modalities.find((m) => m.id === selectedId) ?? null;
@@ -160,6 +169,7 @@ export function Scene({ lens, colorMode, modalities, selectedId, onSelect, camer
           lens={lens}
           isSelected={m.id === selectedId}
           isFrontier={frontier.has(m.id)}
+          isDimmed={activeIds ? !activeIds.has(m.id) && m.id !== selectedId : false}
           onSelect={onSelect}
           preview={preview}
         />

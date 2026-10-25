@@ -1,13 +1,16 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import type { Modality } from '../data/modalities';
+import { modalitiesData, type Modality } from '../data/modalities';
 import { FAMILY_CONFIG } from '../data/taxonomy';
-import { fmtHours, fmtMoney, fmtPrice, pricePerHour } from '../data/derive';
+import { archetypeOf, fmtHours, fmtMoney, fmtPrice, medianPrice, pricePerHour } from '../data/derive';
+import { totalHoursB, totalRevenueB } from '../data/facts';
 
 export interface TipState {
   x: number;
   y: number;
   content: ReactNode;
 }
+
+const MED_PRICE = medianPrice(modalitiesData);
 
 export function Tooltip({ tip }: { tip: TipState | null }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -28,6 +31,8 @@ export function Tooltip({ tip }: { tip: TipState | null }) {
 }
 
 export function ModalityTip({ m, rows = [] }: { m: Modality; rows?: [string, string][] }) {
+  const revPct = ((m.revenueB / totalRevenueB) * 100).toFixed(1);
+  const hrsPct = ((m.hoursB / totalHoursB) * 100).toFixed(1);
   return (
     <>
       <div className="tip-head">
@@ -35,14 +40,18 @@ export function ModalityTip({ m, rows = [] }: { m: Modality; rows?: [string, str
         <span>${m.ticker}</span>
       </div>
       <div className="tip-sub">
-        {m.family} · {FAMILY_CONFIG[m.family].mode}
+        {m.family} · {FAMILY_CONFIG[m.family].mode} · {archetypeOf(m, MED_PRICE)}
       </div>
       <dl className="tip-rows">
         <dt>Revenue</dt>
-        <dd>{fmtMoney(m.revenueB)}</dd>
+        <dd>
+          {fmtMoney(m.revenueB)} <span className="tip-pct">({revPct}%)</span>
+        </dd>
         <dt>Hours / year</dt>
-        <dd>{fmtHours(m.hoursB)}</dd>
-        <dt>Per hour</dt>
+        <dd>
+          {fmtHours(m.hoursB)} <span className="tip-pct">({hrsPct}%)</span>
+        </dd>
+        <dt>Yield / hour</dt>
         <dd>{fmtPrice(pricePerHour(m))}</dd>
         {rows.map(([k, v]) => (
           <span key={k} style={{ display: 'contents' }}>
@@ -51,6 +60,14 @@ export function ModalityTip({ m, rows = [] }: { m: Modality; rows?: [string, str
           </span>
         ))}
       </dl>
+      <div className="tip-boundary">
+        <div>
+          <b>In:</b> {m.includes}
+        </div>
+        <div>
+          <b>Out:</b> {m.excludes}
+        </div>
+      </div>
     </>
   );
 }
