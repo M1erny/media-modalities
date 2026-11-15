@@ -40,6 +40,7 @@ import { ModalityTip, type TipState } from './Tooltip';
 const maxRev = Math.max(...D.map((m) => m.revenueB));
 const medPrice = medianPrice(D);
 const frontier = economicFrontier(D);
+const frontierNodes = D.filter((m) => frontier.has(m.id)).sort((a, b) => a.supplyCostPerHour - b.supplyCostPerHour);
 const radius = (m: Modality) => Math.sqrt(m.revenueB / maxRev);
 const color = (m: Modality) => MODE_CONFIG[modeOf(m)].color;
 
@@ -85,9 +86,9 @@ export function ChapterScale({ onTip }: { onTip: (t: TipState | null) => void })
     <>
       <h3>Now resize the same 32 blocks by time: {fmtHours(totalHoursB)} a year</h3>
       <p>
-        <b>Attend</b> — cinemas, concerts, stadiums, theatre, theme parks, museums and immersive rooms — collapses to{' '}
+        <b>Attend</b> — cinemas, live concerts, stadium sports, performing arts, theme parks, museums and immersive venues — collapses to{' '}
         {(familyShare('Attend', 'hours') * 100).toFixed(1)}% of global hours ({fmtHours(familyHours('Attend'))}). Meanwhile <b>Watch</b>, <b>Listen</b> and{' '}
-        <b>Converse</b> (led by messaging &amp; communities) swell to{' '}
+        <b>Converse</b> (led by private messaging) swell to{' '}
         {(100 * (familyShare('Watch', 'hours') + familyShare('Listen', 'hours') + familyShare('Converse', 'hours'))).toFixed(0)}% of all human media attention.
       </p>
     </>,
@@ -95,9 +96,9 @@ export function ChapterScale({ onTip }: { onTip: (t: TipState | null) => void })
       <h3>Hours × revenue per hour = total revenue</h3>
       <p>
         Put hours on the horizontal axis and revenue per hour on the vertical, both on log scales. Because revenue is their product, experiences on the same
-        diagonal line earn the same total dollars: <b>Live sports attendance</b> ({fmtHours(byId.get('sports_attendance')!.hoursB)} ×{' '}
-        {fmtPrice(pricePerHour(byId.get('sports_attendance')!))}/h = $60B) sits near the same diagonal as <b>YouTube</b> ({fmtHours(byId.get('youtube')!.hoursB)}{' '}
-        × {fmtPrice(pricePerHour(byId.get('youtube')!))}/h = $54B) and <b>Messaging &amp; communities</b> ({fmtHours(byId.get('messaging')!.hoursB)} ×{' '}
+        diagonal line earn the same total dollars: <b>Stadium sports</b> ({fmtHours(byId.get('sports_attendance')!.hoursB)} ×{' '}
+        {fmtPrice(pricePerHour(byId.get('sports_attendance')!))}/h = $60B) sits near the same diagonal as <b>Creator video</b> ({fmtHours(byId.get('youtube')!.hoursB)}{' '}
+        × {fmtPrice(pricePerHour(byId.get('youtube')!))}/h = $54B) and <b>Private messaging</b> ({fmtHours(byId.get('messaging')!.hoursB)} ×{' '}
         {fmtPrice(pricePerHour(byId.get('messaging')!))}/h = $45B).
       </p>
     </>,
@@ -251,10 +252,16 @@ export function ChapterModels({ onTip }: { onTip: (t: TipState | null) => void }
       );
     }),
     <>
-      <h3>Six experiences sit on the efficient frontier</h3>
+      <h3>{frontier.size} experiences sit on the efficient frontier</h3>
       <p>
-        No other node beats them on both axes: <b>Short-video apps</b>, <b>Social networks</b>, <b>AI chat</b>, <b>Board &amp; tabletop</b>,{' '}
-        <b>Escape rooms &amp; immersive</b> and <b>Live sports attendance</b>. Every other experience pays more to make an hour, earns less for it, or both.
+        No other node beats them on both axes:{' '}
+        {frontierNodes.map((m, idx) => (
+          <span key={m.id}>
+            {idx > 0 ? (idx === frontierNodes.length - 1 ? ' and ' : ', ') : ''}
+            <b>{m.name}</b>
+          </span>
+        ))}
+        . Every other experience pays more to make an hour, earns less for it, or both.
       </p>
     </>,
   ];
@@ -308,8 +315,8 @@ export function ChapterModels({ onTip }: { onTip: (t: TipState | null) => void }
       intro="Replace consumer hours with what it costs the industry to make one fresh hour of content, from $100 of user-generated video to $30M of theatrical film."
       takeaway={
         <>
-          Every experience falls into one of <b>4 structural quadrants</b> split at <b>$100k/h supply cost</b> and the <b>{fmtPrice(medPrice)}/h median yield</b>.
-          Six experiences define the <b>Pareto efficient frontier</b>.
+          Every experience falls into one of <b>4 structural quadrants</b> split at <b>$100k/h supply cost</b> and the <b>{fmtPrice(medPrice)}/h median yield</b>.{' '}
+          {frontier.size} experiences define the <b>Pareto efficient frontier</b>.
         </>
       }
       stepLabels={['Volume Engines', 'Margin Niches', 'Scale Bets', 'Premium Experiences', 'Efficient Frontier']}
@@ -390,16 +397,16 @@ export function ChapterAI({ onTip }: { onTip: (t: TipState | null) => void }) {
     <>
       <h3>2030 scenario: rendered and written media slide left</h3>
       <p>
-        Apply each experience’s AI exposure score to its supply cost: <code>cost ÷ 10^(2 × exposure)</code>. <b>Games</b>, <b>streaming TV</b>, <b>books</b>,{' '}
-        <b>audiobooks</b>, <b>gamified learning</b> and <b>news</b> shift one to two orders of magnitude cheaper to make (hollow circles are 2025; filled are 2030).
+        Apply each experience’s AI exposure score to its supply cost: <code>cost ÷ 10^(2 × exposure)</code>. <b>Games</b>, <b>streaming video</b>, <b>consumer books</b>,{' '}
+        <b>audiobooks</b>, <b>skill puzzles</b> and <b>news media</b> shift one to two orders of magnitude cheaper to make (hollow circles are 2025; filled are 2030).
       </p>
       <p className="aside">This is a scenario to make the direction visible, not a forecast. We keep revenue per hour fixed to isolate the supply shock.</p>
     </>,
     <>
       <h3>Physical venues and real-stakes events barely move</h3>
       <p>
-        <b>Concerts</b>, <b>live sports</b>, <b>theme parks</b>, <b>museums &amp; zoos</b>, <b>theatre</b>, <b>escape rooms</b>, <b>tabletop</b> and{' '}
-        <b>betting &amp; iGaming</b> are anchored by real bodies, real turf and real money. When every digital stream becomes cheap to synthesize, scarcity concentrates in
+        <b>Live concerts</b>, <b>stadium sports</b>, <b>theme parks</b>, <b>museums</b>, <b>performing arts</b>, <b>immersive venues</b>, <b>tabletop games</b> and{' '}
+        <b>real-money wagering</b> are anchored by real bodies, real turf and real money. When every digital stream becomes cheap to synthesize, scarcity concentrates in
         what cannot be rendered.
       </p>
     </>,
@@ -501,15 +508,15 @@ export function ChapterMind({ onTip }: { onTip: (t: TipState | null) => void }) 
     <>
       <h3>Yet cognitive load does not predict price per hour (r = {cogFit.r.toFixed(2)})</h3>
       <p>
-        Put revenue per hour on the vertical axis and the slope disappears. <b>Books</b>, <b>PC games</b> and <b>gamified learning</b> demand intense focus for
-        35¢–45¢ an hour; <b>concerts</b> and <b>theme parks</b> ask very little mental effort and collect $7–$12. The market does not pay you for working harder.
+        Put revenue per hour on the vertical axis and the slope disappears. <b>Consumer books</b>, <b>PC games</b> and <b>skill puzzles</b> demand intense focus for
+        35¢–45¢ an hour; <b>live concerts</b> and <b>theme parks</b> ask very little mental effort and collect $7–$12. The market does not pay you for working harder.
       </p>
     </>,
     <>
       <h3>Agency does not predict price per hour either (r = {agFit.r.toFixed(2)})</h3>
       <p>
-        <b>Messaging</b>, <b>AI chat</b> and <b>PC games</b> give you near-total control over what happens next and earn 5¢–37¢ an hour. <b>Cinema</b> and{' '}
-        <b>live sports attendance</b> give you zero control over the outcome and earn $2–$12 an hour.
+        <b>Private messaging</b>, <b>conversational AI</b> and <b>PC games</b> give you near-total control over what happens next and earn 5¢–37¢ an hour. <b>Cinema</b> and{' '}
+        <b>stadium sports</b> give you zero control over the outcome and earn $2–$12 an hour.
       </p>
     </>,
   ];
@@ -608,8 +615,8 @@ export function ChapterBody({ onTip }: { onTip: (t: TipState | null) => void }) 
     <>
       <h3>Platform moat monetizes through volume of hours, not price per hour (r = {moatFit.r.toFixed(2)})</h3>
       <p>
-        The strongest moats in media — <b>Messaging &amp; communities</b>, <b>YouTube</b>, <b>Social networks</b>, <b>Short-video apps</b> and <b>PC games</b> —
-        do not charge $10 an hour. They use network effects to capture <i>billions of hours</i> at 5¢–35¢ an hour, while open formats like <b>books</b> and{' '}
+        The strongest moats in media — <b>Private messaging</b>, <b>Creator video</b>, <b>Social feeds</b>, <b>Short-form video</b> and <b>PC games</b> —
+        do not charge $10 an hour. They use network effects to capture <i>billions of hours</i> at 5¢–35¢ an hour, while open formats like <b>consumer books</b> and{' '}
         <b>cinema</b> must charge by the unit because they have no social graph holding you inside.
       </p>
     </>,

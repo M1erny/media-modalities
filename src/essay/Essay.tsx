@@ -129,16 +129,16 @@ export function Essay({
                 <span className="tldr-num">01 · Scale vs Yield</span>
                 <b>Time and money flow to opposite places</b>
                 <p>
-                  Out-of-home venues capture <b>15% of revenue on 0.5% of hours</b> (~$5.70/h), while Watch, Listen &amp; Converse take <b>92% of hours</b> at
-                  5¢–21¢/h.
+                  Out-of-home venues capture <b>14% of revenue on 0.4% of hours</b> (~$5.70/h), while Watch, Listen &amp; Converse take <b>87% of hours</b> at
+                  5¢–15¢/h.
                 </p>
               </a>
               <a href="#models" className="tldr-card">
                 <span className="tldr-num">02 · Business Models</span>
                 <b>Supply cost × $/h defines 4 archetypes</b>
                 <p>
-                  Splitting at <b>$100k/h creation cost</b> and <b>{fmtPrice(medPrice)}/h median yield</b> sorts all {D.length} experiences into 4 quadrants and a
-                  6-node Pareto frontier.
+                  Splitting at <b>$100k/h creation cost</b> and <b>{fmtPrice(medPrice)}/h median yield</b> sorts all {D.length} experiences into 4 quadrants and a{' '}
+                  {frontierSet.size}-node Pareto frontier.
                 </p>
               </a>
               <a href="#ai" className="tldr-card">

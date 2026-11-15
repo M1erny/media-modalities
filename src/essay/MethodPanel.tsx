@@ -60,23 +60,23 @@ export function MethodPanel({ open, onClose }: { open: boolean; onClose: () => v
           </p>
           <ul className="changes">
             <li>
-              <b>Live sports broadcasts</b> move from Linear TV and Streaming TV into <b>Sports viewing</b> (80/20 split, matching Ampere’s broadcaster vs
-              streamer sports-rights share), while stadium tickets sit in <b>Live sports attendance</b> and sportsbooks/iGaming sit in{' '}
-              <b>Betting, iGaming &amp; lotteries</b>.
+              <b>Live sports</b> is split cleanly by activity: live TV/streaming rights move from <b>Linear TV</b> and <b>Streaming video</b> into{' '}
+              <b>Sports broadcasts</b> (80/20 split, matching Ampere’s broadcaster vs streamer sports-rights share), stadium gate receipts sit in{' '}
+              <b>Stadium sports</b>, and sportsbooks/iGaming sit in <b>Real-money wagering</b>.
             </li>
             <li>
-              <b>Alphabet / YouTube</b> is split cleanly across three nodes: core creator video, Shorts and YouTube Premium sit in <b>YouTube</b>; YouTube TV
-              bundles sit in <b>Linear &amp; pay TV</b>; YouTube Music sits in <b>Recorded music</b>.
+              <b>Creator &amp; bundle platforms</b> are split by format rather than company brand: open creator video, Shorts and ad-free tiers sit in{' '}
+              <b>Creator video</b>; vMVPD channel bundles (YouTube TV, Hulu + Live) sit in <b>Linear TV</b>; music streaming tiers sit in <b>Recorded music</b>.
             </li>
             <li>
-              <b>Meta &amp; social platforms</b>: public algorithmic feeds (Instagram, Facebook, X, Reddit, LinkedIn, Pinterest) sit in <b>Social networks</b>;
-              WhatsApp, Discord, Telegram and WeChat 1-on-1/group chats sit in <b>Messaging &amp; communities</b>; standalone vertical video apps (TikTok,
-              Douyin, Kuaishou) sit in <b>Short-video apps</b>.
+              <b>Social &amp; messaging platforms</b>: public algorithmic feeds (Instagram, Facebook, X, Reddit, LinkedIn, Pinterest) sit in{' '}
+              <b>Social feeds</b>; WhatsApp, Discord, Telegram, FaceTime and WeChat 1-on-1/group chats and calls sit in <b>Private messaging</b>; standalone
+              vertical video apps (TikTok, Douyin, Kuaishou) sit in <b>Short-form video</b>.
             </li>
             <li>
-              <b>Book publishing &amp; reading</b>: narrated audio editions are carved out into <b>Audiobooks &amp; audio drama</b>; manga, graphic novels and
-              webtoons sit in <b>Comics, manga &amp; webtoons</b>; daily word/logic puzzles (Wordle, NYT Games, Chess.com, Duolingo) sit in{' '}
-              <b>Gamified learning &amp; daily puzzles</b>.
+              <b>Publishing &amp; daily habits</b>: consumer trade print, e-books and web novels sit in <b>Consumer books</b>; narrated audio editions sit in{' '}
+              <b>Audiobooks</b>; manga, graphic novels and webtoons sit in <b>Comic books</b>; daily word/logic puzzles and streaks (Wordle, NYT Games,
+              Chess.com, Duolingo) sit in <b>Skill puzzles</b>.
             </li>
           </ul>
           <p>
