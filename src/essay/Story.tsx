@@ -118,13 +118,13 @@ export function ChapterScale({ onTip }: { onTip: (t: TipState | null) => void })
           y1 = rev / x1;
         const y2 = priceAxis.domain[0],
           x2 = rev / y2;
-        const lx = Math.min(hoursAxis.domain[1] * 0.55, rev / (priceAxis.domain[0] * 1.6));
+        const lx = Math.max(hoursAxis.domain[0] * 1.4, rev / (priceAxis.domain[1] * 0.55));
         const ly = rev / lx;
         return (
           <g key={rev}>
             <line x1={sx(x1)} y1={sy(y1)} x2={sx(x2)} y2={sy(y2)} />
-            <text x={sx(lx)} y={sy(ly) - 5} textAnchor="end">
-              ${rev}B revenue
+            <text x={sx(lx) + 6} y={sy(ly) + 4} textAnchor="start">
+              ${rev}B rev
             </text>
           </g>
         );
@@ -170,7 +170,7 @@ export function ChapterScale({ onTip }: { onTip: (t: TipState | null) => void })
           per hour.
         </>
       }
-      stepLabels={['1. Money ($B)', '2. Time (Hours)', '3. Hours × $/h', '4. The 450× Ladder']}
+      stepLabels={['Money ($B)', 'Time (Hours)', 'Hours × $/h', 'The 450× Ladder']}
       steps={steps}
       graphic={(step) =>
         step < 2 ? (
@@ -189,6 +189,16 @@ export function ChapterScale({ onTip }: { onTip: (t: TipState | null) => void })
             highlight={step === 3 ? ladderSet : null}
             labels={step === 3 ? 'none' : 'auto'}
             background={step === 2 ? isoBackground : undefined}
+            obstacles={
+              step === 2
+                ? ({ sx, sy }) =>
+                    isoRevenueLines.map((rev) => {
+                      const lx = Math.max(hoursAxis.domain[0] * 1.4, rev / (priceAxis.domain[1] * 0.55));
+                      const ly = rev / lx;
+                      return { x: sx(lx) + 4, y: sy(ly) - 8, w: 58, h: 16 };
+                    })
+                : undefined
+            }
             foreground={step === 3 ? ladderForeground : undefined}
             tip={(id) => <ModalityTip m={byId.get(id)!} />}
             onTip={onTip}
@@ -302,7 +312,7 @@ export function ChapterModels({ onTip }: { onTip: (t: TipState | null) => void }
           Six experiences define the <b>Pareto efficient frontier</b>.
         </>
       }
-      stepLabels={['1. Volume Engines', '2. Margin Niches', '3. Scale Bets', '4. Premium Experiences', '5. Efficient Frontier']}
+      stepLabels={['Volume Engines', 'Margin Niches', 'Scale Bets', 'Premium Experiences', 'Efficient Frontier']}
       steps={steps}
       graphic={(step) => (
         <Scatter
@@ -311,6 +321,16 @@ export function ChapterModels({ onTip }: { onTip: (t: TipState | null) => void }
           yAxis={priceAxis}
           highlight={highlightFor(step)}
           background={quadBackground(step < 4 ? ARCHETYPE_ORDER[step] : null, step === 4)}
+          obstacles={({ plot, sy }) => {
+            const cy = sy(medPrice);
+            return [
+              { x: plot.x + 6, y: plot.y + 4, w: 110, h: 20 },
+              { x: plot.x + plot.w - 150, y: plot.y + 4, w: 146, h: 20 },
+              { x: plot.x + 6, y: plot.y + plot.h - 24, w: 122, h: 20 },
+              { x: plot.x + plot.w - 94, y: plot.y + plot.h - 24, w: 90, h: 20 },
+              { x: plot.x + plot.w - 110, y: cy - 18, w: 106, h: 16 },
+            ];
+          }}
           tip={(id) => {
             const m = byId.get(id)!;
             return <ModalityTip m={m} rows={[['Supply cost', `${fmtCost(m.supplyCostPerHour)}/h`], ['Model', archetypeOf(m, medPrice)]]} />;
@@ -396,7 +416,7 @@ export function ChapterAI({ onTip }: { onTip: (t: TipState | null) => void }) {
           High-exposure digital media (<b>Games, Video, Books, Audio, Learning</b>) compress <b>10×–60× in creation cost</b>, while physical venues and live stakes (<b>Attend, Sports, Tabletop, Betting</b>) become the ultimate scarcity anchor.
         </>
       }
-      stepLabels={['1. 2025 Baseline', '2. 2030 AI Shift', '3. The Physical Anchor']}
+      stepLabels={['2025 Baseline', '2030 AI Shift', 'The Physical Anchor']}
       steps={steps}
       graphic={(step) => (
         <Scatter
@@ -506,7 +526,7 @@ export function ChapterMind({ onTip }: { onTip: (t: TipState | null) => void }) 
           <b>Lean-forward</b> habits, but have <b>near-zero correlation</b> with what consumers pay per hour.
         </>
       }
-      stepLabels={['1. Load × Agency', '2. Load × $/hour', '3. Agency × $/hour']}
+      stepLabels={['Load × Agency', 'Load × $/hour', 'Agency × $/hour']}
       steps={steps}
       graphic={(step) =>
         step === 0 ? (
@@ -624,7 +644,7 @@ export function ChapterBody({ onTip }: { onTip: (t: TipState | null) => void }) 
           <b>Platform moat (r = {moatFit.r.toFixed(2)})</b> monetizes by locking in recurring daily hours rather than charging high hourly prices.
         </>
       }
-      stepLabels={['1. Sensory × $/hour', '2. Platform Moat × $/hour']}
+      stepLabels={['Sensory × $/hour', 'Platform Moat × $/hour']}
       steps={steps}
       graphic={(step) =>
         step === 0 ? (

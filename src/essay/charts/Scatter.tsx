@@ -1,4 +1,4 @@
-import { useId, useMemo, type ReactNode } from 'react';
+import { useId, useMemo, useState, type ReactNode } from 'react';
 import { useSize } from '../hooks';
 import { makeScale, placeLabels, type AxisSpec, type Box } from '../scales';
 import type { TipState } from '../Tooltip';
@@ -40,13 +40,16 @@ interface Props {
 
 export function Scatter({ points, xAxis, yAxis, highlight, labels = 'auto', background, foreground, obstacles, tip, onTip, ariaLabel, compact }: Props) {
   const [ref, { width, height }] = useSize<HTMLDivElement>();
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
   const clipId = 'clip' + useId().replace(/[^a-zA-Z0-9]/g, '');
   const narrow = width < 520;
-  const m = compact ? { l: 40, r: 10, t: 10, b: 38 } : { l: narrow ? 44 : 56, r: narrow ? 10 : 20, t: 16, b: narrow ? 44 : 52 };
+  const m = compact ? { l: 42, r: 12, t: 10, b: 38 } : { l: narrow ? 50 : 62, r: narrow ? 14 : 22, t: 16, b: narrow ? 46 : 52 };
   const plot: Box = { x: m.l, y: m.t, w: Math.max(10, width - m.l - m.r), h: Math.max(10, height - m.t - m.b) };
-  const sx = makeScale(xAxis, plot.x, plot.x + plot.w);
-  const sy = makeScale(yAxis, plot.y + plot.h, plot.y);
   const maxR = Math.max(10, Math.min(plot.w, plot.h) / (compact ? 14 : 11));
+  const padX = compact ? 8 : Math.min(20, maxR * 0.55);
+  const padY = compact ? 6 : 10;
+  const sx = makeScale(xAxis, plot.x + padX, plot.x + plot.w - padX);
+  const sy = makeScale(yAxis, plot.y + plot.h - padY, plot.y + padY);
 
   const placed = useMemo(() => {
     const pos = new Map<string, { x: number; y: number; r: number }>();
@@ -71,15 +74,28 @@ export function Scatter({ points, xAxis, yAxis, highlight, labels = 'auto', back
   const textOf = new Map(points.map((p) => [p.id, p.label]));
 
   const tipHandlers = (id: string) => ({
-    onPointerEnter: (e: React.PointerEvent) => onTip({ x: e.clientX, y: e.clientY, content: tip(id) }),
+    onPointerEnter: (e: React.PointerEvent) => {
+      setHoveredId(id);
+      onTip({ x: e.clientX, y: e.clientY, content: tip(id) });
+    },
     onPointerMove: (e: React.PointerEvent) => onTip({ x: e.clientX, y: e.clientY, content: tip(id) }),
-    onPointerLeave: () => onTip(null),
+    onPointerLeave: () => {
+      setHoveredId(null);
+      onTip(null);
+    },
     onFocus: (e: React.FocusEvent) => {
+      setHoveredId(id);
       const b = (e.currentTarget as Element).getBoundingClientRect();
       onTip({ x: b.left + b.width / 2, y: b.top, content: tip(id) });
     },
-    onBlur: () => onTip(null),
+    onBlur: () => {
+      setHoveredId(null);
+      onTip(null);
+    },
   });
+
+  const hoveredPoint = hoveredId ? points.find((p) => p.id === hoveredId) ?? null : null;
+  const hoveredPlaced = hoveredPoint ? placed.get(hoveredPoint.id) ?? null : null;
 
   return (
     <div ref={ref} className="chart" role="img" aria-label={ariaLabel}>
@@ -112,7 +128,7 @@ export function Scatter({ points, xAxis, yAxis, highlight, labels = 'auto', back
             <text className="axis-title" x={plot.x + plot.w / 2} y={height - 6} textAnchor="middle">
               {xAxis.title}
             </text>
-            <text className="axis-title" transform={`translate(${compact ? 11 : 14},${plot.y + plot.h / 2}) rotate(-90)`} textAnchor="middle">
+            <text className="axis-title" transform={`translate(${compact ? 11 : 15},${plot.y + plot.h / 2}) rotate(-90)`} textAnchor="middle">
               {yAxis.title}
             </text>
           </g>
@@ -120,15 +136,16 @@ export function Scatter({ points, xAxis, yAxis, highlight, labels = 'auto', back
           <g className="marks">
             {drawOrder.map((p) => {
               const q = placed.get(p.id)!;
-              const dim = highlight ? !highlight.has(p.id) : false;
+              const isHov = p.id === hoveredId;
+              const dim = highlight ? !highlight.has(p.id) && !isHov : false;
               return (
-                <g key={p.id} className="mark" style={{ transform: `translate(${q.x}px, ${q.y}px)`, opacity: dim ? 0.16 : 1 }}>
+                <g key={p.id} className="mark" style={{ transform: `translate(${q.x}px, ${q.y}px)`, opacity: dim ? 0.2 : 1 }}>
                   <circle
                     r={q.r}
                     fill={p.hollow ? 'var(--bg)' : p.color}
-                    fillOpacity={p.hollow ? 1 : 0.88}
-                    stroke={p.hollow ? p.color : 'var(--bg)'}
-                    strokeWidth={p.hollow ? 1.75 : 2}
+                    fillOpacity={p.hollow ? 1 : 0.9}
+                    stroke={isHov ? '#eef0f4' : p.hollow ? p.color : 'var(--bg)'}
+                    strokeWidth={isHov ? 2.5 : p.hollow ? 1.75 : 2}
                     tabIndex={dim ? -1 : 0}
                     aria-label={p.label}
                     {...tipHandlers(p.id)}
@@ -136,13 +153,40 @@ export function Scatter({ points, xAxis, yAxis, highlight, labels = 'auto', back
                 </g>
               );
             })}
+            {hoveredPoint && hoveredPlaced && (
+              <circle
+                cx={hoveredPlaced.x}
+                cy={hoveredPlaced.y}
+                r={hoveredPlaced.r + 4.5}
+                fill="none"
+                stroke="#eef0f4"
+                strokeWidth={1.6}
+                strokeOpacity={0.85}
+                style={{ pointerEvents: 'none' }}
+              />
+            )}
           </g>
           <g className="labels">
             {labelPlacements.map((l) => (
-              <text key={l.id} className="mark-label" x={l.x} y={l.y} textAnchor={l.anchor}>
-                {textOf.get(l.id)}
-              </text>
+              <g key={l.id}>
+                {l.leader && (
+                  <line className="label-leader" x1={l.leader.x1} y1={l.leader.y1} x2={l.leader.x2} y2={l.leader.y2} />
+                )}
+                <text className={`mark-label${l.id === hoveredId ? ' is-hovered' : ''}`} x={l.x} y={l.y} textAnchor={l.anchor}>
+                  {textOf.get(l.id)}
+                </text>
+              </g>
             ))}
+            {hoveredPoint && hoveredPlaced && hoveredPoint.label && !labelPlacements.some((l) => l.id === hoveredPoint.id) && (
+              <text
+                className="mark-label is-hovered"
+                x={Math.min(plot.x + plot.w - 6, Math.max(plot.x + 6, hoveredPlaced.x))}
+                y={Math.max(plot.y + 14, hoveredPlaced.y - hoveredPlaced.r - 8)}
+                textAnchor={hoveredPlaced.x > plot.x + plot.w * 0.72 ? 'end' : hoveredPlaced.x < plot.x + plot.w * 0.28 ? 'start' : 'middle'}
+              >
+                {hoveredPoint.label}
+              </text>
+            )}
           </g>
           {foreground?.(ctx)}
         </svg>

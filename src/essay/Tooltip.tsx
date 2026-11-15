@@ -18,10 +18,17 @@ export function Tooltip({ tip }: { tip: TipState | null }) {
   useLayoutEffect(() => {
     if (!tip || !ref.current) return;
     const { offsetWidth: w, offsetHeight: h } = ref.current;
-    const left = Math.min(window.innerWidth - w - 8, Math.max(8, tip.x + 14));
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    let left = tip.x + 16;
+    if (tip.x > vw * 0.56 || left + w > vw - 12) {
+      left = tip.x - w - 16;
+    }
+    left = Math.min(vw - w - 10, Math.max(10, left));
     let top = tip.y - h - 12;
-    if (top < 60) top = tip.y + 18;
-    setPos({ left, top });
+    if (top < 64) top = tip.y + 18;
+    top = Math.min(Math.max(64, vh - h - 10), Math.max(64, top));
+    setPos({ left: Math.round(left), top: Math.round(top) });
   }, [tip]);
   return (
     <div ref={ref} className="tip" role="tooltip" style={{ ...pos, opacity: tip ? 1 : 0 }}>

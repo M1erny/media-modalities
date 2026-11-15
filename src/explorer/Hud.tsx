@@ -17,7 +17,7 @@ import {
 import { FAMILY_CONFIG, FAMILY_ORDER, MODE_CONFIG, MODE_ORDER, type Family, type Mode } from '../data/taxonomy';
 import { modalitiesData } from '../data/modalities';
 import { nodeColor, type CameraPreset, type ColorMode } from './colors';
-import { AXIS_STYLE } from './Scene';
+import { AXIS_STYLE } from './axes3d';
 
 export type FilterState = 'All' | 'Frontier' | Mode | Family;
 
@@ -89,71 +89,86 @@ export function Hud(p: Props) {
 
   return (
     <div className="hud">
-      <div className="hud-bar">
-        <div className="hud-group">
-          {p.onClose && (
-            <button className="hud-btn" onClick={p.onClose}>
-              ← Essay
+      <div className="hud-top">
+        <div className="hud-bar">
+          <div className="hud-group">
+            {p.onClose && (
+              <button className="hud-btn" onClick={p.onClose}>
+                ← Essay
+              </button>
+            )}
+            <span className="hud-title">Media Modalities · 3D</span>
+          </div>
+          <div className="hud-group" role="group" aria-label="Lens and colour">
+            <Seg value={p.lens} set={p.setLens} options={[['economic', 'Economic'], ['biological', 'Biological']]} />
+            <Seg value={p.colorMode} set={p.setColorMode} options={[['mode', 'Mode'], ['family', 'Family'], ['senses', 'Senses']]} />
+          </div>
+          <div className="hud-group" role="group" aria-label="Camera">
+            <Seg
+              value={p.cameraPreset}
+              set={p.setCameraPreset}
+              options={[
+                ['isometric', '3D Cube'],
+                ['xy', 'Front (X×Y)'],
+                ['zy', 'Side (Z×Y)'],
+                ['xz', 'Top (X×Z)'],
+              ]}
+            />
+            <button className="hud-btn" onClick={() => p.setTour(true)}>
+              Orbit
             </button>
-          )}
-          <span className="hud-title">Media Modalities · 3D</span>
-        </div>
-        <div className="hud-group" role="group" aria-label="Lens and colour">
-          <Seg value={p.lens} set={p.setLens} options={[['economic', 'Economic'], ['biological', 'Biological']]} />
-          <Seg value={p.colorMode} set={p.setColorMode} options={[['mode', 'Mode'], ['family', 'Family'], ['senses', 'Senses']]} />
-        </div>
-        <div className="hud-group" role="group" aria-label="Camera">
-          <Seg
-            value={p.cameraPreset}
-            set={p.setCameraPreset}
-            options={[
-              ['isometric', '3D Cube'],
-              ['xy', 'Front (X×Y)'],
-              ['zy', 'Side (Z×Y)'],
-              ['xz', 'Top (X×Z)'],
-            ]}
-          />
-          <button className="hud-btn" onClick={() => p.setTour(true)}>
-            Orbit
-          </button>
-        </div>
-        <div className="hud-group">
-          {p.onOpenMethod && (
-            <button className="hud-btn" onClick={p.onOpenMethod}>
-              Method
+          </div>
+          <div className="hud-group">
+            {p.onOpenMethod && (
+              <button className="hud-btn" onClick={p.onOpenMethod}>
+                Method
+              </button>
+            )}
+            <button className={`hud-btn${listOpen ? ' active' : ''}`} onClick={() => setListOpen((o) => !o)} aria-expanded={listOpen}>
+              List ({p.modalities.length})
             </button>
-          )}
-          <button className={`hud-btn${listOpen ? ' active' : ''}`} onClick={() => setListOpen((o) => !o)} aria-expanded={listOpen}>
-            List ({p.modalities.length})
-          </button>
+          </div>
         </div>
-      </div>
 
-      {/* Live 3D Axis Guide + Quick Isolate Filter Bar */}
-      <div className="hud-subbar">
-        <div className="hud-axes-pill" aria-label="Active 3D axes">
-          <span>
-            <b>{axes.x[0]}:</b> {axes.x[1]}
-          </span>
-          <span>
-            <b>{axes.y[0]}:</b> {axes.y[1]}
-          </span>
-          <span>
-            <b>{axes.z[0]}:</b> {axes.z[1]}
-          </span>
-        </div>
-        <div className="hud-filter-pill" role="group" aria-label="Isolate in 3D">
-          <span className="hud-filter-label">Isolate:</span>
-          {(['All', 'Frontier', ...MODE_ORDER, ...FAMILY_ORDER] as const).map((f) => (
-            <button
-              key={f}
-              type="button"
-              className={`hud-chip${p.filter === f ? ' active' : ''}`}
-              onClick={() => p.setFilter(p.filter === f ? 'All' : f)}
-            >
-              {f}
-            </button>
-          ))}
+        {/* Live 3D Axis Guide + Quick Isolate Filter Bar */}
+        <div className="hud-subbar">
+          <div className="hud-axes-pill" aria-label="Active 3D axes">
+            <span>
+              <b>{axes.x[0]}:</b> {axes.x[1]}
+            </span>
+            <span>
+              <b>{axes.y[0]}:</b> {axes.y[1]}
+            </span>
+            <span>
+              <b>{axes.z[0]}:</b> {axes.z[1]}
+            </span>
+          </div>
+          <div className="hud-filter-pill" role="group" aria-label="Isolate in 3D">
+            <span className="hud-filter-label">Isolate:</span>
+            {(['All', 'Frontier', ...MODE_ORDER, ...FAMILY_ORDER] as const).map((f) => {
+              const isMode = (MODE_ORDER as readonly string[]).includes(f);
+              const isFam = (FAMILY_ORDER as readonly string[]).includes(f);
+              const swatchColor = isMode
+                ? MODE_CONFIG[f as Mode].color
+                : isFam
+                  ? p.colorMode === 'family'
+                    ? FAMILY_CONFIG[f as Family].color
+                    : MODE_CONFIG[FAMILY_CONFIG[f as Family].mode].color
+                  : null;
+              return (
+                <button
+                  key={f}
+                  type="button"
+                  className={`hud-chip${p.filter === f ? ' active' : ''}`}
+                  onClick={() => p.setFilter(p.filter === f ? 'All' : f)}
+                >
+                  {f === 'Frontier' && <i className="hud-chip-ring" aria-hidden="true" />}
+                  {swatchColor && <i className="hud-chip-dot" style={{ background: swatchColor }} aria-hidden="true" />}
+                  {f}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 

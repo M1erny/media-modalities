@@ -78,11 +78,12 @@ export function Treemap({ data, metric, highlight, tip, onTip, format }: Props) 
     const outer = squarify(families, { x: 0, y: 0, w: width, h: height });
     const total = families.reduce((s, f) => s + f.value, 0);
     return outer.map((f) => {
+      const headH = f.w > 42 && f.h > 26 ? 22 : GAP;
       const inner = squarify(
         data.filter((m) => m.family === f.family).map((m) => ({ m, value: value(m) })),
-        { x: f.x + GAP, y: f.y + 22, w: Math.max(0, f.w - 2 * GAP), h: Math.max(0, f.h - 22 - GAP) },
+        { x: f.x + GAP, y: f.y + headH, w: Math.max(0, f.w - 2 * GAP), h: Math.max(0, f.h - headH - GAP) },
       );
-      return { ...f, share: f.value / total, inner };
+      return { ...f, headH, share: f.value / total, inner };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, metric, width, height]);
@@ -91,25 +92,28 @@ export function Treemap({ data, metric, highlight, tip, onTip, format }: Props) 
     <div ref={ref} className="treemap" role="img" aria-label={`Treemap of ${metric} by family and experience`}>
       {layout.map((f) => {
         const color = MODE_CONFIG[FAMILY_CONFIG[f.family].mode].color;
-        const showHead = f.w > 70 && f.h > 30;
+        const showFullHead = f.w > 78 && f.h > 26;
+        const showCompactHead = !showFullHead && f.headH > GAP;
         return (
           <div key={f.family} className="tm-family" style={{ left: f.x, top: f.y, width: f.w, height: f.h, ['--c' as string]: color }}>
-            {showHead && (
+            {(showFullHead || showCompactHead) && (
               <div className="tm-family-head">
                 <span>{f.family}</span>
-                <span className="tm-share">{Math.round(f.share * 1000) / 10}%</span>
+                {showFullHead && <span className="tm-share">{Math.round(f.share * 1000) / 10}%</span>}
               </div>
             )}
             {f.inner.map((c) => {
               const dim = highlight ? !highlight.has(c.m.id) : false;
-              const big = c.w > 64 && c.h > 34;
+              const cw = Math.max(0, c.w - GAP);
+              const ch = Math.max(0, c.h - GAP);
+              const tier = cw > 72 && ch > 34 ? 'full' : cw > 44 && ch > 20 ? 'compact' : cw > 26 && ch > 14 ? 'mini' : 'none';
               return (
                 <div
                   key={c.m.id}
-                  className={`tm-cell${dim ? ' dim' : ''}`}
+                  className={`tm-cell${dim ? ' dim' : ''}${tier !== 'full' ? ` tm-cell-${tier}` : ''}`}
                   tabIndex={dim ? -1 : 0}
                   aria-label={`${c.m.name}: ${format(c.value)}`}
-                  style={{ left: c.x - f.x, top: c.y - f.y, width: Math.max(0, c.w - GAP), height: Math.max(0, c.h - GAP) }}
+                  style={{ left: c.x - f.x, top: c.y - f.y, width: cw, height: ch }}
                   onPointerEnter={(e) => onTip({ x: e.clientX, y: e.clientY, content: tip(c.m.id) })}
                   onPointerMove={(e) => onTip({ x: e.clientX, y: e.clientY, content: tip(c.m.id) })}
                   onPointerLeave={() => onTip(null)}
@@ -119,12 +123,14 @@ export function Treemap({ data, metric, highlight, tip, onTip, format }: Props) 
                   }}
                   onBlur={() => onTip(null)}
                 >
-                  {big && (
+                  {tier === 'full' && (
                     <>
                       <span className="tm-name">{c.m.short}</span>
                       <span className="tm-value">{format(c.value)}</span>
                     </>
                   )}
+                  {tier === 'compact' && <span className="tm-name">{c.m.short}</span>}
+                  {tier === 'mini' && <span className="tm-mini">${c.m.ticker}</span>}
                 </div>
               );
             })}

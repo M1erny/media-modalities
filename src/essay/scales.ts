@@ -31,6 +31,7 @@ export interface PlacedLabel {
   x: number;
   y: number;
   anchor: 'start' | 'middle' | 'end';
+  leader?: { x1: number; y1: number; x2: number; y2: number };
 }
 
 export interface Box {
@@ -41,21 +42,28 @@ export interface Box {
 }
 
 /**
- * Greedy label placement: try right, left, above, below, and diagonal offsets in priority order;
- * skip a label rather than let it collide with another label, a mark, or the frame.
+ * Greedy label placement: try close 8-way offsets first; in crowded clusters, search
+ * an extended radial ring and connect displaced labels back with a clean leader line.
  */
 export function placeLabels(points: LabelPoint[], all: LabelPoint[], frame: Box, obstacles: Box[] = [], charW = 6.1, h = 13): PlacedLabel[] {
   const boxes: Box[] = [...obstacles];
   const out: PlacedLabel[] = [];
-  const overlaps = (a: Box, b: Box) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+  const overlaps = (a: Box, b: Box) => a.x < b.x + b.w + 2 && a.x + a.w + 2 > b.x && a.y < b.y + b.h + 1 && a.y + a.h + 1 > b.y;
   const hitsCircle = (b: Box, p: LabelPoint) => {
     const cx = Math.max(b.x, Math.min(p.x, b.x + b.w));
     const cy = Math.max(b.y, Math.min(p.y, b.y + b.h));
-    return (cx - p.x) ** 2 + (cy - p.y) ** 2 < Math.max(2, p.r - 0.5) ** 2;
+    return (cx - p.x) ** 2 + (cy - p.y) ** 2 < Math.max(2.5, p.r + 0.5) ** 2;
   };
+  const fits = (b: Box, selfId: string) => {
+    if (b.x < frame.x || b.x + b.w > frame.x + frame.w || b.y < frame.y || b.y + b.h > frame.y + frame.h) return false;
+    if (boxes.some((o) => overlaps(b, o))) return false;
+    if (all.some((q) => q.id !== selfId && hitsCircle(b, q))) return false;
+    return true;
+  };
+
   for (const p of points) {
     const w = p.text.length * charW;
-    const cands: [Box, PlacedLabel['anchor']][] = [
+    const close: [Box, PlacedLabel['anchor']][] = [
       [{ x: p.x + p.r + 4, y: p.y - h / 2, w, h }, 'start'],
       [{ x: p.x - p.r - 4 - w, y: p.y - h / 2, w, h }, 'end'],
       [{ x: p.x - w / 2, y: p.y - p.r - 3 - h, w, h }, 'middle'],
@@ -65,14 +73,51 @@ export function placeLabels(points: LabelPoint[], all: LabelPoint[], frame: Box,
       [{ x: p.x - p.r - 3 - w, y: p.y - p.r - h, w, h }, 'end'],
       [{ x: p.x - p.r - 3 - w, y: p.y + p.r, w, h }, 'end'],
     ];
-    for (const [b, anchor] of cands) {
-      if (b.x < frame.x || b.x + b.w > frame.x + frame.w || b.y < frame.y || b.y + b.h > frame.y + frame.h) continue;
-      if (boxes.some((o) => overlaps(b, o))) continue;
-      if (all.some((q) => q.id !== p.id && hitsCircle(b, q))) continue;
+
+    let placed = false;
+    for (const [b, anchor] of close) {
+      if (!fits(b, p.id)) continue;
       boxes.push(b);
       const x = anchor === 'start' ? b.x : anchor === 'end' ? b.x + w : b.x + w / 2;
       out.push({ id: p.id, x, y: b.y + h - 3, anchor });
+      placed = true;
       break;
+    }
+    if (placed) continue;
+
+    // Extended ring search with leader lines for dense clusters
+    const angles = [-Math.PI / 4, Math.PI / 4, -Math.PI / 2, Math.PI / 2, (-3 * Math.PI) / 4, (3 * Math.PI) / 4, 0, Math.PI, -Math.PI / 6, Math.PI / 6, (-5 * Math.PI) / 6, (5 * Math.PI) / 6];
+    for (const reach of [16, 28, 42, 58]) {
+      for (const ang of angles) {
+        const dist = p.r + reach;
+        const ax = p.x + Math.cos(ang) * dist;
+        const ay = p.y + Math.sin(ang) * dist;
+        const cos = Math.cos(ang);
+        const anchor: PlacedLabel['anchor'] = Math.abs(cos) < 0.25 ? 'middle' : cos > 0 ? 'start' : 'end';
+        const bx = anchor === 'start' ? ax : anchor === 'end' ? ax - w : ax - w / 2;
+        const by = ay - h / 2;
+        const b: Box = { x: bx, y: by, w, h };
+        if (!fits(b, p.id)) continue;
+        boxes.push(b);
+        const x = anchor === 'start' ? b.x : anchor === 'end' ? b.x + w : b.x + w / 2;
+        const lx2 = anchor === 'start' ? b.x - 2 : anchor === 'end' ? b.x + w + 2 : x;
+        const ly2 = b.y + h / 2;
+        out.push({
+          id: p.id,
+          x,
+          y: b.y + h - 3,
+          anchor,
+          leader: {
+            x1: p.x + Math.cos(ang) * (p.r + 1),
+            y1: p.y + Math.sin(ang) * (p.r + 1),
+            x2: lx2,
+            y2: ly2,
+          },
+        });
+        placed = true;
+        break;
+      }
+      if (placed) break;
     }
   }
   return out;
